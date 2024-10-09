@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "834426903714",
+    "project_id": "xpiderchat",
+    "storage_bucket": "xpiderchat.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834426903714:android:db44669fef87fba5740bfb",
+        "android_client_info": {
+          "package_name": "com.xpider_chat.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834426903714-pg5fdil1b392clnasu45e1uirasdfcbv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.xpider_chat.app",
+            "certificate_hash": "e9fd5dc47d42ce132c5d907ca7308c0fe03f53fb"
+          }
+        },
+        {
+          "client_id": "834426903714-dve0pvnrd6r5r9jf7ku10phos1jgbm39.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZTGhlPyFGgvlcUw5qvDCPTVC4XeoC4QA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834426903714-dve0pvnrd6r5r9jf7ku10phos1jgbm39.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "834426903714-e43gdcn422qucjo6vb3e2k20qur95boh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.xpiderChat"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834426903714:android:0046fe6e4bd1cdb5740bfb",
+        "android_client_info": {
+          "package_name": "com.example.xpider_chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834426903714-dve0pvnrd6r5r9jf7ku10phos1jgbm39.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZTGhlPyFGgvlcUw5qvDCPTVC4XeoC4QA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834426903714-dve0pvnrd6r5r9jf7ku10phos1jgbm39.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "834426903714-e43gdcn422qucjo6vb3e2k20qur95boh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.xpiderChat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
