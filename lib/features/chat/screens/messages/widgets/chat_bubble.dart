@@ -3,10 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
+import 'package:xpider_chat/data/contacts/contacts_controller.dart';
+import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
+import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/utils/constants/colors.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
+
+import '../../../../../data/user/user.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
@@ -15,12 +20,13 @@ class ChatBubble extends StatelessWidget {
     required this.time,
     required this.status,
     required this.imageUrl,
-
     required this.isRead,
-    required this.isComing
+    required this.isComing,
+    required this.senderName
   });
 
   final dynamic message;
+  final String senderName;
   final String time, status, imageUrl;
   final bool isRead, isComing;
 
@@ -28,24 +34,34 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
 
     final dark = THelperFunctions.isDarkMode(context);
-      return Padding(
+    // final UserModel sender =aw ContactsController .instance.getUser(senderId);
+
+    return Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment:
             isComing ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
               // isThread ? ElevatedButton(onPressed: () {}, child: const Text("Thread")):
+
+              /// Message Body
               RoundedContainer(
                 isMessageContainer: true,
-                backgroundColor: dark
-                    ? TColors.white.withOpacity(0.2)
+                backgroundColor: isComing
+                    ? TColors.black
                     : TColors.primary.withOpacity(0.5),
+                constraints: BoxConstraints(
+                  maxWidth: THelperFunctions.screenWidth() * 0.8
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /// Sender_Name
+                      Text(senderName, style: TextStyle(color: isComing ? Colors.yellow : TColors.white, fontSize: 10)),
                       if (imageUrl != '')
+                        /// Image Message Body
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),
                           child: Container(
@@ -55,6 +71,8 @@ class ChatBubble extends StatelessWidget {
                               ),
                               child: Image.file(File(imageUrl))),
                         ),
+
+                      /// Text Message Outline
                       message.isNotEmpty ? Text(message, style: Theme.of(context).textTheme.titleSmall)
                           : const SizedBox(),
                     ],
@@ -72,7 +90,7 @@ class ChatBubble extends StatelessWidget {
                           .textTheme
                           .labelLarge),
                   const SizedBox(width: TSizes.spaceBtwItems),
-                  const Icon(Iconsax.tick_square4)
+                  const Icon(Icons.check_outlined)
                 ],
               ),
             ],

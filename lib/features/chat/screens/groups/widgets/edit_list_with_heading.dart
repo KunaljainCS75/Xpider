@@ -32,8 +32,6 @@ class EditListWithHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
-    final admins = GroupController.instance.groupAdmins;
-    print(admins.length);
     return Column(
         children: [
 

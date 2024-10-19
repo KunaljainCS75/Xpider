@@ -3,35 +3,39 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:xpider_chat/data/repositories/group/group_repository.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
 import 'package:xpider_chat/features/chat/models/group_message_model.dart';
+import '../../../data/user/user.dart';
 import '../../../utils/constants/image_strings.dart';
 import '../../../utils/constants/sizes.dart';
+import '../../../utils/popups/loaders.dart';
 import '../models/group_user_model.dart';
 
 class GroupController extends GetxController{
   static GroupController get instance => Get.find();
 
+  final groupRepository = Get.put(GroupRepository());
   final db = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
 
   RxList<GroupUserModel> groupMembers = <GroupUserModel>[].obs;
-  RxList<GroupUserModel> groupAdmins = <GroupUserModel>[].obs;
-
 
   RxInt size = 0.obs;
   RxInt adminSize = 0.obs;
-  RxBool isLoading = true.obs;
+  RxBool isLoading = false.obs;
   RxList<String> memberIds = <String>[].obs;
   final RxString selectedSortOption = 'All Groups'.obs;
   RxString selectedImagePath = ''.obs;
 
   var uuid = const Uuid();
 
-  RxBool imageUploading = true.obs;
+  RxBool imageUploading = false.obs;
   RxList<GroupRoomModel> myGroups =  <GroupRoomModel>[].obs;
+  RxList<GroupRoomModel> myGroupsCopy =  <GroupRoomModel>[].obs;
 
 
   @override
@@ -42,19 +46,16 @@ class GroupController extends GetxController{
   }
 
   Future<void> addGroup({
-    required String groupName, String? description, required String groupProfilePicture, required List<GroupUserModel> users, required List<GroupUserModel> admins})
+    required String groupName, String? description, required String groupProfilePicture, required List<GroupUserModel> participants})
   async {
-    for (var user in admins){
-        users.removeWhere((person) => user.id == person.id);
-      }
+
 
     final groupId = const Uuid().v6();
     var newGroup = GroupRoomModel(
         id: groupId,
         groupName: groupName,
         description: description ?? "No description has been provided",
-        admins: admins,
-        users: users,
+        participants: participants,
         groupProfilePicture: groupProfilePicture,
         createdAt: DateTime.now().toString(),
         createdBy: UserController.instance.myGroupProfile(),
@@ -64,19 +65,14 @@ class GroupController extends GetxController{
     try {
 
       /// Store on Database
-      for (var user in admins) {
+      for (var user in participants) {
         await db.collection("Users").doc(user.id)
             .collection("Groups").doc(groupId).set(newGroup.toJson());
       }
-
-      for (var user in users) {
-        await db.collection("Users").doc(user.id)
-            .collection("Groups").doc(groupId).set(newGroup.toJson());
-      }
+      await db.collection("AllGroups").doc(groupId).set(newGroup.toJson());
 
       /// Reset
       groupMembers.clear();
-      groupAdmins.clear();
       size.value = 0;
       adminSize.value = 0;
     } catch (e) {
@@ -89,8 +85,12 @@ class GroupController extends GetxController{
     final snapshot = await db.collection("Users").doc(auth.currentUser!.uid)
         .collection("Groups").get();
 
+    // List<String> myGroupIds = snapshot.docs.map((group) => group['Id'] as String).toList();
+    // QuerySnapshot myGroupsDetails = await db.collection("AllGroups").where(FieldPath.documentId, whereIn: myGroupIds).get();
+
     final groups = snapshot.docs.map((group) => GroupRoomModel.fromSnapshot(group)).toList();
     myGroups.assignAll(groups);
+    myGroupsCopy.assignAll(groups);
   }
 
     Stream<List<GroupMessageModel>> getGroupMessages ({required String memberId, required String groupId}){
@@ -123,30 +123,17 @@ class GroupController extends GetxController{
       );
 
       /// Update Message record in all member's database
-      for (var person in group.admins) {
+      for (var person in group.participants) {
         await db.collection("Users").doc(person.id).collection("Groups")
             .doc(group.id).collection("Messages").doc(newGroupMessage.id)
             .set(newGroupMessage.toJson());
       }
-      for (var person in group.editors!) {
-        await db.collection("Users").doc(person.id).collection("Groups")
-            .doc(group.id).collection("Messages").doc(newGroupMessage.id)
-            .set(newGroupMessage.toJson());
-      }
-      for (var person in group.users!) {
-        await db.collection("Users").doc(person.id).collection("Groups")
-            .doc(group.id).collection("Messages").doc(newGroupMessage.id)
-            .set(newGroupMessage.toJson());
-      }
-
 
       /// Update GroupRoom details according to to lastMessage;
       var updatedGroupRoomDetails = GroupRoomModel(
         id: group.id,
         groupName: group.groupName,
-        admins: group.admins,
-        editors: group.editors,
-        users: group.users,
+        participants: group.participants,
         createdAt: group.createdAt,
         createdBy: group.createdBy,
         status: group.status,
@@ -164,15 +151,7 @@ class GroupController extends GetxController{
       );
 
       /// Update Group Room Details
-      for (var user in group.admins) {
-        await db.collection("Users").doc(user.id)
-            .collection("Groups").doc(group.id).update(updatedGroupRoomDetails.toJson());
-      }
-      for (var user in group.editors!) {
-        await db.collection("Users").doc(user.id)
-            .collection("Groups").doc(group.id).update(updatedGroupRoomDetails.toJson());
-      }
-      for (var user in group.users!) {
+      for (var user in group.participants) {
         await db.collection("Users").doc(user.id)
             .collection("Groups").doc(group.id).update(updatedGroupRoomDetails.toJson());
       }
@@ -184,33 +163,123 @@ class GroupController extends GetxController{
       isLoading.value = false;
     }
   }
+
+  Future <void> removeUser(GroupRoomModel group, List<GroupUserModel> participants, String userId) async {
+
+    try {
+      for (var user in participants) {
+        DocumentReference docRef = db.collection("Users").doc(user.id)
+            .collection("Groups").doc(group.id);
+
+        await docRef.get().then((docSnapshot) {
+          List<dynamic> members = List.from(docSnapshot.get('Participants'));
+          members.removeWhere((member) => member['Id'] == userId);
+          docRef.update({'Participants': members});
+        });
+
+      }
+      await db.collection("Users").doc(userId).collection("Groups").doc(
+          group.id).delete();
+      } catch (e) {
+        print(e);
+      }
+    }
+
+  Future <void> addParticipants({required GroupRoomModel group, required List<GroupUserModel> participants}) async {
+
+    /// Update existing groupUsers' Data
+    for (var user in group.participants){
+      DocumentReference groupDocRef = db.collection("Users").doc(user.id).collection("Groups").doc(group.id);
+      await groupDocRef.update({
+        'Participants': FieldValue.arrayUnion(participants.map((user) => user.toJson()).toList())
+      });
+    }
+
+    /// Add new participants in current (not updated) groupMembersList
+    for (var user in participants){
+      group.participants.add(user);
+    }
+
+    var newGroup = GroupRoomModel(
+        id: group.id,
+        groupName: group.groupName,
+        description: group.description ?? "No description has been provided",
+        participants: group.participants,
+        groupProfilePicture: group.groupProfilePicture,
+        createdAt: group.createdAt,
+        createdBy: group.createdBy,
+        status: "Active"
+    );
+
+    /// Update Group Room Details
+    for (var user in participants) {
+      await db.collection("Users").doc(user.id)
+          .collection("Groups").doc(group.id).set(newGroup.toJson());
+    }
+
+  }
+
+  int getGroupParticipantsLength(GroupRoomModel group){
+    return group.participants.length;
+  }
+
+  Future <GroupRoomModel> getGroupById(String id) async {
+    final group = await db.collection("Users").doc(UserController.instance.user.value.id)
+        .collection("Groups").doc(id).get();
+    return GroupRoomModel.fromSnapshot(group);
+  }
 /// ---------------------------------------------------------------------------------///
+  /// Filter Functions
+  void showAllGroups(){
+    myGroups.clear();
+    myGroups.assignAll(myGroupsCopy);
+  }
+
+  Future<void> showPinnedGroups() async{
+    List <GroupRoomModel> pinnedRooms = <GroupRoomModel>[];
+    for (var group in UserController.instance.pinnedGroups){
+      pinnedRooms.add(await getGroupById(group));
+    }
+    myGroups.clear();
+    myGroups.assignAll(pinnedRooms);
+  }
+
+  Future<void> showFavouriteGroups() async{
+    List <GroupRoomModel> favouriteRooms = <GroupRoomModel>[];
+    for (var group in UserController.instance.favouriteGroups){
+      favouriteRooms.add(await getGroupById(group));
+    }
+    myGroups.clear();
+    myGroups.assignAll(favouriteRooms);
+  }
+
+  Future<void> showArchivedGroups() async{
+    List <GroupRoomModel> archivedRooms = <GroupRoomModel>[];
+    for (var group in UserController.instance.archivedGroups){
+      archivedRooms.add(await getGroupById(group));
+    }
+    myGroups.clear();
+    myGroups.assignAll(archivedRooms);
+  }
+
   void sortChats (String sortOption) {
     selectedSortOption.value = sortOption;
 
     switch (sortOption) {
       case "All Groups" :
-        // s.value++;
-        // showAllChats();
+        showAllGroups();
         break;
       case "Pinned Groups" :
-        // s.value = 9;
-        // showPinnedChats();
+        showPinnedGroups();
         break;
       case "Favourite Groups" :
-        // s.value = 8;
-        // showFavouriteChats();
+        showFavouriteGroups();
         break;
       case "Archived Groups" :
-        // s.value = 1;
-        // showArchivedChats();
+        showArchivedGroups();
         break;
-    // case "Groups" :
-    //   getRoomId(auth.currentUser!.uid);
-    //   break;
       default:
-        // getAllChatRooms();
-
+        showAllGroups();
     }
   }
 
@@ -244,42 +313,36 @@ class GroupController extends GetxController{
 
 
 /// Update User Profile picture
-  // uploadUserProfilePicture() async {
-  //   try{
-  //
-  //     final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-  //
-  //     if (image != null) {
-  //       imageUploading.value = true;
-  //
-  //       // Upload Image
-  //       final imageUrl = await UserRepository.instance.uploadImage('Groups/Images/', image);
-  //
-  //       QuerySnapshot snapshot = await db.collection("AllChats").where('Receiver.Email', isEqualTo: user.value.email).get();
-  //
-  //
-  //       // Logging the number of documents returned
-  //       // print("Number of chat rooms found: ${snapshot.docs.length}");
-  //
-  //       // Iterate over each document and update the profile picture
-  //       for (var chatRoom in snapshot.docs) {
-  //         await chatRoom.reference.update({"Receiver.ProfilePicture": imageUrl});
-  //       }
-  //
-  //       // Update User Image Record
-  //       Map<String, dynamic> json = {'ProfilePicture': imageUrl};
-  //       await userRepository.updateSingleField(json);
-  //       user.value.profilePicture = imageUrl;
-  //       user.refresh();
-  //
-  //       Loaders.successSnackBar(title: "Profile Picture Changed", message: "Your profile image has been updated...");}
-  //   }
-  //   catch (e) {
-  //     Loaders.warningSnackBar(title: 'Oh Snap', message: "Something went wrong: $e");
-  //   }
-  //   finally {
-  //     imageUploading.value = false;
-  //   }
-  // }
+  uploadGroupProfilePicture({required GroupRoomModel group}) async {
+
+    try{
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+      if (image != null) {
+        imageUploading.value = true;
+
+        // Upload Image
+        final imageUrl = await groupRepository.uploadImage('Groups/Images/Profile/', image);
+
+        // Iterate over each document and update the profile picture
+        for (var user in group.participants) {
+          final groupRoom = await db.collection("Users").doc(user.id)
+              .collection("Groups").doc(group.id).get();
+          await groupRoom.reference.update({"GroupProfilePicture" : imageUrl});
+        }
+
+        // Completion Message
+        group.groupProfilePicture = imageUrl;
+        Loaders.successSnackBar(title: "Profile Picture Changed", message: "Group profile image has been updated...");
+
+      }
+    }
+    catch (e) {
+      Loaders.warningSnackBar(title: 'Oh Snap', message: "Something went wrong: $e");
+    }
+    finally {
+      imageUploading.value = false;
+    }
+  }
 
 }

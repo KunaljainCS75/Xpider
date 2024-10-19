@@ -13,6 +13,7 @@ import '../../../../data/user/user.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/popups/loaders.dart';
 import '../../controllers/thread_controller.dart';
+import '../../controllers/user_controller.dart';
 
 class ThreadsScreen extends StatelessWidget {
   const ThreadsScreen({super.key, required this.receiver});
@@ -50,7 +51,7 @@ class ThreadsScreen extends StatelessWidget {
                         const SizedBox(width: TSizes.spaceBtwItems / 2),
                         Text("${threadController.threadRoomList[index].id!} : ", style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis,),
                         const SizedBox(width: TSizes.spaceBtwItems),
-                        Text(threadController.threadRoomList[index].threadName, style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis,),
+                        Flexible(child: Text(threadController.threadRoomList[index].threadName, style: Theme.of(context).textTheme.titleMedium, overflow: TextOverflow.ellipsis,)),
                       ],
                     )
                     ),
@@ -74,11 +75,11 @@ class ThreadsScreen extends StatelessWidget {
                 print(threadNameController.text);
                 chatController.selectedImagePath.value = '';
                 chatController.sendMessage(
-                    receiver.id,
-                    receiver,
-                    "A Thread is created...",
-                    chatController.selectedImagePath.value);
-                await threadController.addThread(receiver, "A Thread is Created", receiver.profilePicture, threadNameController.text);
+                    receiver: receiver,
+                    message: UserController.instance.encryptor.encrypt("A thread is created", iv: UserController.instance.iv).base64,
+                    sender: UserController.instance.user.value,
+                    imgUrl: chatController.selectedImagePath.value);
+                await threadController.addThread(receiver, UserController.instance.encryptor.encrypt("A thread is created", iv: UserController.instance.iv).base64, receiver.profilePicture, threadNameController.text);
                 threadNameController.clear();
                 Get.back();
 

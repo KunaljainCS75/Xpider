@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/features/chat/screens/contacts/contacts.dart';
 import 'package:xpider_chat/data/contacts/contacts_controller.dart';
+import 'package:xpider_chat/features/chat/screens/groups/xpider_members.dart';
 import '../../../../../common/appbar/appbar.dart';
 import '../../../../../utils/constants/colors.dart';
 import '../../../../../utils/constants/text_strings.dart';
@@ -48,26 +49,14 @@ class ThemeAppBar extends StatelessWidget {
         ],
       ),
       actions: [
-        IconButton(onPressed: () => Get.to(() => const Contacts(), transition: Transition.fade, duration: Duration(milliseconds: 950)), icon: const Icon(Icons.add)),
-        PopupMenuButton(
-            offset: Offset.fromDirection(1, 50),
-
-            icon: const Icon(Iconsax.menu, color: TColors.white),
-            itemBuilder: (BuildContext context) {
-              return {'Favourites', 'Starred Messages', 'Pinned Chats'}.map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            }
-        ),
+        IconButton(onPressed: () => Get.to(() => const Contacts(), transition: Transition.fade, duration: Duration(milliseconds: 950)), icon: const Icon(Icons.add, color: Colors.white)),
+        IconButton(onPressed: () => Get.to(() => const XpiderMembersScreen()), icon: const Icon(Iconsax.menu, color: TColors.white)),
         Obx(
         () => AnimatedRotation(turns: turns.value, duration: const Duration(seconds: 1), child: IconButton(
               onPressed: () {
                 turns.value += 1;
                 controller.getAllChatRooms();}, icon: const Icon
-              (Icons.refresh)
+              (Icons.refresh, color: TColors.white)
           ),),
         )
       ],

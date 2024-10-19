@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/features/personalization/screens/settings/account/account_settings.dart';
-
 import '../../../../common/custom_shapes/containers/primary_header_container.dart';
 import '../../../../common/list_tiles/settings_menu_tile.dart';
 import '../../../../common/list_tiles/user_profile_tile.dart';
 import '../../../../common/texts/section_heading.dart';
-import '../../../../data/repositories/authentication/authentication_repository.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/helpers/helper_functions.dart';
 import '../profile/profile.dart';
@@ -59,7 +57,6 @@ class SettingScreen extends StatelessWidget {
                 const SizedBox(height: TSizes.spaceBtwItems),
                 SettingsMenuTile(icon: Iconsax.notification, title: 'Notifications', subtitle: 'Messages, groups, calling', onTap: (){},),
                 SettingsMenuTile(icon: Iconsax.messages_24, title: 'Chats', subtitle: 'Theme, wallpapers, chat history', onTap: () {}),
-                SettingsMenuTile(icon: Iconsax.heart_tick4, title: 'Favourites', subtitle: 'List of all favourite chats', onTap: (){},),
                 SettingsMenuTile(icon: Iconsax.user_cirlce_add, title: 'Invite', subtitle: 'Tell your friends about Xpider and invite them', onTap: (){},),
                 // SettingsMenuTile(icon: Iconsax.document_upload, title: 'Load Data', subtitle: 'Upload Data to your Cloud FireBase', onTap: (){}),
                 // SettingsMenuTile(icon: Iconsax.location, title: 'Geolocation', subtitle: 'Set recommendation based on location', trailing: Switch(value: true, onChanged: (value) {})),

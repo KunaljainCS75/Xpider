@@ -13,6 +13,8 @@ class GroupUserModel{
   String profilePicture;
   String about;
   final int? numberOfMessages;
+  bool admin;
+  bool editor;
 
   GroupUserModel({
     required this.id,
@@ -23,7 +25,9 @@ class GroupUserModel{
     required this.email,
     required this.profilePicture,
     this.about = "I am Busy",
-    this.numberOfMessages = 0
+    this.numberOfMessages = 0,
+    this.admin = false,
+    this.editor = false,
 
   });
 
@@ -61,7 +65,9 @@ class GroupUserModel{
       'PhoneNumber' : phoneNumber,
       'ProfilePicture' : profilePicture,
       'About' : about,
-      'NumberOfMessages' : numberOfMessages
+      'NumberOfMessages' : numberOfMessages,
+      'Admin' : admin,
+      'Editor' : editor
     };
   }
 
@@ -79,7 +85,9 @@ class GroupUserModel{
           email: data['Email'] ?? '',
           profilePicture: data['ProfilePicture'] ?? 'assets/images/user/user.png',
           about: data["About"] ?? 'I am busy',
-          numberOfMessages: data["NumberOfMessages"] ?? 0
+          numberOfMessages: data["NumberOfMessages"] ?? 0,
+          admin: data["Admin"] ?? false,
+          editor: data["Editor"] ?? false,
       );
     }
     throw Exception("No such User Found");
@@ -97,7 +105,9 @@ class GroupUserModel{
         email: data['Email'] ?? '',
         profilePicture: data['ProfilePicture'] ?? 'assets/images/user/user.png',
         about: data["About"] ?? 'I am busy',
-        numberOfMessages: data["NumberOfMessages"] ?? 0
+        numberOfMessages: data["NumberOfMessages"] ?? 0,
+        admin: data["Admin"] ?? false,
+        editor: data["Editor"] ?? false,
     );
   }
 }

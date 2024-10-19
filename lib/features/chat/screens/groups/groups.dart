@@ -11,6 +11,7 @@ import 'package:xpider_chat/utils/constants/sizes.dart';
 
 import '../../../../common/sort/sort_options.dart';
 import '../../../../utils/constants/text_strings.dart';
+import '../../controllers/user_controller.dart';
 
 class GroupsScreen extends StatelessWidget {
   const GroupsScreen({super.key});
@@ -18,8 +19,11 @@ class GroupsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groupController = GroupController.instance;
+    final userController = UserController.instance;
+
     groupController.getAllGroupRooms();
-    print(groupController.myGroups.length);
+    userController.getAllPinnedFavouriteArchivedGroups();
+
     return Scaffold(
       appBar: TAppBar(
         showBackArrow: false,

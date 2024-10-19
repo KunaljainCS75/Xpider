@@ -3,12 +3,10 @@ import 'group_user_model.dart';
 
 class GroupRoomModel{
   final String id;
-  final String groupName;
-  final String? description;
-  final String? groupProfilePicture;
-  final List<GroupUserModel>? users;
-  final List<GroupUserModel>? editors;
-  final List<GroupUserModel> admins;
+  String groupName;
+  String? description;
+  String? groupProfilePicture;
+  final List<GroupUserModel> participants;
   final bool isRead;
   final bool isPinned;
   final bool isFavourite;
@@ -27,9 +25,7 @@ class GroupRoomModel{
     required this.groupName,
     this.description,
     this.groupProfilePicture,
-    this.users,
-    this.editors,
-    required this.admins,
+    required this.participants,
     required this.createdAt,
     required this.createdBy,
     this.groupMessages,
@@ -45,7 +41,7 @@ class GroupRoomModel{
   });
 
   /// Empty Model
-  static GroupRoomModel empty() => GroupRoomModel(id: '', groupName: 'Group', admins: [], createdAt: DateTime.now().toString(), status: '', createdBy: GroupUserModel.empty());
+  static GroupRoomModel empty() => GroupRoomModel(id: '', groupName: 'Group', createdAt: DateTime.now().toString(), status: '', createdBy: GroupUserModel.empty(), participants: []);
 
   /// Convert Model to JSON Structure to (upload) store in Firebase
   toJson(){
@@ -54,9 +50,7 @@ class GroupRoomModel{
       'GroupName' : groupName,
       'GroupProfilePicture' : groupProfilePicture,
       'GroupDescription' : description,
-      'Admins' : admins.map((admin) => admin.toJson()).toList(),
-      'Users' : users != null ? users!.map((user) => user.toJson()).toList() : [],
-      'Editors' : editors != null ? editors!.map((user) => user.toJson()).toList() : [],
+      'Participants' : participants.map((user) => user.toJson()).toList(),
       'IsPinned' : isPinned,
       'IsRead' : isRead,
       'IsArchived' : isArchived,
@@ -89,12 +83,10 @@ class GroupRoomModel{
       isFavourite: data['IsFavourite'] ?? true,
       lastMessageTime: data['LastMessageTime'] ?? "",
       groupMessages: data["GroupMessages"] ?? [],
-      admins: (data["Admins"] as List<dynamic>).map((admin)=> GroupUserModel.fromJson(admin)).toList(),
-      users: (data["Users"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
-      editors: (data["Editors"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
+      participants: (data["Participants"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
       createdAt: data['CreatedAt'] ?? '',
       createdBy: GroupUserModel.fromJson(data["CreatedBy"]),
-      lastMessage: data['LastMessage'] ?? '',
+      lastMessage: data['LastMessage'] ?? 'group_created',
       lastMessageBy: data['LastMessageBy'] ?? '',
     );
   }
@@ -116,12 +108,10 @@ class GroupRoomModel{
       isFavourite: data['IsFavourite'] ?? true,
       lastMessageTime: data['LastMessageTime'] ?? "",
       groupMessages: data["GroupMessages"] ?? [],
-      admins: (data["Admins"] as List<dynamic>).map((admin)=> GroupUserModel.fromJson(admin)).toList(),
-      users: (data["Users"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
-      editors: (data["Editors"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
+      participants: (data["Participants"] as List<dynamic>).map((user)=> GroupUserModel.fromJson(user)).toList(),
       createdAt: data['CreatedAt'] ?? '',
       createdBy: GroupUserModel.fromJson(data["CreatedBy"]),
-      lastMessage: data['LastMessage'] ?? '',
+      lastMessage: data['LastMessage'] ?? 'group_created',
       lastMessageBy: data['LastMessageBy'] ?? '',
     );
   }

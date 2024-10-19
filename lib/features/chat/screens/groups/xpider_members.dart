@@ -105,13 +105,12 @@ class XpiderMembersScreen extends StatelessWidget {
                       RxBool isSelected = false.obs;
                       return InkWell(
                         onTap: () {
-
-                            if (user.id == userController.user.value.id) {
-                              Loaders.customToast(
-                                  message: "You will be added by default");
-                              return;
-                            }
                             if (isGroupCreation) {
+                              if (user.id == userController.user.value.id) {
+                                Loaders.customToast(
+                                    message: "You will be added by default");
+                                return;
+                              }
                               // if (group.length == 3){
                               //   GroupController.instance.extraMembers.add(user);
                               //   GroupController.instance.size.value++;

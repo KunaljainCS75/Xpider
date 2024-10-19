@@ -1,3 +1,4 @@
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +18,7 @@ import 'package:xpider_chat/utils/helpers/helper_functions.dart';
 import '../../../../common/loaders/shimmer_loader.dart';
 import '../../../../data/repositories/user/user_repository.dart';
 import '../../../../utils/popups/loaders.dart';
+import '../contacts/contacts.dart';
 
 class GroupFillDetailsScreen extends StatelessWidget {
   const GroupFillDetailsScreen({super.key});
@@ -30,33 +32,23 @@ class GroupFillDetailsScreen extends StatelessWidget {
 
     final groupController = GroupController.instance;
     final groupMembers = groupController.groupMembers;
-    final groupAdmins = groupController.groupAdmins;
     final groupMemberIds = groupController.memberIds;
 
     Rx<String> imageUrl = "assets/images/user/group.png".obs;
     RxBool isNetworkImage = false.obs;
     RxBool isImageUploading = false.obs;
 
-    /// Add yourself as Admin by default
+
     final myProfile = UserController.instance.user.value;
-    if (!groupAdmins.contains((person) => person.id == myProfile.id)){
-      groupAdmins.add(
-          GroupUserModel(
-              id: myProfile.id,
-              firstName: myProfile.firstName,
-              lastName: myProfile.lastName,
-              username: myProfile.username,
-              phoneNumber: myProfile.phoneNumber,
-              email: myProfile.email,
-              profilePicture: myProfile.profilePicture
-          ));
-    }
 
-
-    return WillPopScope(
-      onWillPop: () async {
-        groupAdmins.removeWhere((person) => person.id == UserController.instance.user.value.id);
-        return true;
+    return PopScope(
+      onPopInvoked: (value) {
+        groupMembers.removeWhere((person) => person.id == myProfile.id);
+        for (var person in groupMembers){
+          if (person.admin == true){
+            person.admin = false;
+          }
+        }
       },
       child: Scaffold(
         appBar: TAppBar(
@@ -64,17 +56,16 @@ class GroupFillDetailsScreen extends StatelessWidget {
           showBackArrow: false,
           actions: [
             IconButton(onPressed: () {
+
               try {
                 if (nameController.text.isNotEmpty) {
                   GroupController.instance.addGroup(
                       groupName: nameController.text,
                       groupProfilePicture: imageUrl.value,
-                      users: groupMembers.toList(),
-                      admins: groupAdmins.toList(),
+                      participants: groupMembers.toList(),
                       description: descriptionController.text
                   );
                   groupMemberIds.clear();
-                  groupAdmins.clear();
                   groupMembers.clear();
                   Get.back();
                   Get.back();
@@ -82,7 +73,7 @@ class GroupFillDetailsScreen extends StatelessWidget {
                 } else {
                   Loaders.warningSnackBar(title: "No group name",
                       message: "Write a name for your group");
-                  print("${groupAdmins.length} - ${groupMembers.length}");
+                  print("${groupMembers.length}");
                 }
               } catch (e) {
                 rethrow;
@@ -170,13 +161,13 @@ class GroupFillDetailsScreen extends StatelessWidget {
               ListWithHeading(
                 heading: 'Admins',
                 overLayColor: Colors.redAccent,
-                imageUrl: "assets/images/user/admin.png", list: groupAdmins),
+                imageUrl: "assets/images/user/admin.png", list: groupMembers.where((person) => person.admin == true).toList()),
 
               /// Group Members
               ListWithHeading(
                 heading: 'Members',
                 imageUrl: "assets/images/user/admin.png",
-                list: groupMembers),
+                list: groupMembers.where((person) => person.admin == false).toList()),
             ],
           ),
         ),

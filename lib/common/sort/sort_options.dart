@@ -20,8 +20,6 @@ class SortOptions extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
       child: DropdownButtonFormField(
         iconEnabledColor: Colors.white,
-        iconDisabledColor: Colors.white,
-        focusColor: Colors.white,
         dropdownColor: Colors.black,
         isExpanded: true,
         hint: const Text("Sort", style: TextStyle(color: Colors.white70)),
@@ -40,7 +38,7 @@ class SortOptions extends StatelessWidget {
         ),
         items: list.map((item) => DropdownMenuItem(
             value: item,
-            child: Text(item))).toList(),
+            child: Text(item, style: Theme.of(context).textTheme.titleMedium!.apply(color: Colors.white)))).toList(),
       ),
     );
   }

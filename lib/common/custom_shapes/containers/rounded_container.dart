@@ -15,7 +15,7 @@ class RoundedContainer extends StatelessWidget {
     this.radius = TSizes.cardRadiusLg,
     this.borderColor = TColors.borderPrimary,
     this.showBorder = false,
-    this.backgroundColor = TColors.white,
+    this.backgroundColor = TColors.white, this.constraints,
   });
 
   final double? width;
@@ -28,12 +28,14 @@ class RoundedContainer extends StatelessWidget {
   final Color backgroundColor;
   final EdgeInsetsGeometry? margin;
   final EdgeInsetsGeometry? padding;
+  final BoxConstraints? constraints;
 
   @override
   Widget build(BuildContext context) {
     return isMessageContainer ?Container(
       width: width,
       height: height,
+      constraints: constraints,
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(

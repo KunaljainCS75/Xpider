@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
 import '../../../data/repositories/authentication/authentication_repository.dart';
 import '../../../data/repositories/user/user_repository.dart';
 import '../../../data/user/user.dart';
@@ -15,7 +19,6 @@ import '../../../utils/popups/full_screen_loader.dart';
 import '../../../utils/popups/loaders.dart';
 import '../../authentication/screens/login/login.dart';
 import '../../authentication/screens/login/re_authenticate_user_login_form.dart';
-import '../models/chat_room_model.dart';
 import '../models/group_user_model.dart';
 
 class UserController extends GetxController {
@@ -42,6 +45,11 @@ class UserController extends GetxController {
   RxList<String> pinnedGroups = <String>[].obs;
   RxList<String> archivedGroups = <String>[].obs;
 
+  RxBool showEmoji = false.obs;
+
+
+  late final encryptor;
+  late final iv;
 
   // RxList<ChatRoomModel> tempChatRoomList = ChatController.instance.chatRoomList;
   // RxList<ChatRoomModel> chatRoomList = ChatController.instance.chatRoomList;
@@ -50,10 +58,17 @@ class UserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    encryption();
     fetchUserRecord();
     fetchAllUserRecord();
   }
 
+  void encryption(){
+    final key = encrypt.Key.fromUtf8("1212314587458888");
+    iv = encrypt.IV.fromUtf8("1234888899990121");
+    encryptor = encrypt.Encrypter(
+        encrypt.AES(key, mode: encrypt.AESMode.cbc));
+  }
   GroupUserModel myGroupProfile() {
     return GroupUserModel(
         id: user.value.id,
@@ -66,6 +81,12 @@ class UserController extends GetxController {
     );
   }
 
+  encrypt.Encrypted stringToEncrypted(String name){
+    Base64Codec base64 = const Base64Codec();
+
+    base64.normalize(name);
+    return encrypt.Encrypted.fromBase64(name);
+  }
   // Fetching User Details
   Future<void> fetchUserRecord() async {
     try {
@@ -138,6 +159,37 @@ class UserController extends GetxController {
   void getAllArchivedChats() {
     fetchUserRecord();
     archivedChats.assignAll(user.value.archivedChats ?? []);
+  }
+
+  Future<void> getAllPinnedFavouriteArchivedGroups() async {
+
+    try {
+      // Reference to the user document in the "Users" collection
+      DocumentReference userRef = db.collection('Users').doc(user.value.id);
+
+      // Fetch the user document
+      DocumentSnapshot userSnapshot = await userRef.get();
+
+      // Check if the document exists and contains the 'pinnedGroups' field
+      if (userSnapshot.exists && userSnapshot.data() != null) {
+
+        // Get the pinnedGroups array field, which contains group IDs
+        List<String> pinnedGroupIds = List<String>.from(userSnapshot.get('PinnedGroups'));
+
+        // Get the pinnedGroups array field, which contains group IDs
+        List<String> favouriteGroupIds = List<String>.from(userSnapshot.get('FavouriteGroups'));
+
+        // Get the pinnedGroups array field, which contains group IDs
+        List<String> archivedGroupIds = List<String>.from(userSnapshot.get('ArchivedGroups'));
+
+        // Assign all in their folders
+        pinnedGroups.assignAll(pinnedGroupIds);
+        favouriteGroups.assignAll(favouriteGroupIds);
+        archivedGroups.assignAll(archivedGroupIds);
+      }
+    } catch (e) {
+      print("Error in fetching groups: $e");
+    }
   }
 
   /// ChatFilters

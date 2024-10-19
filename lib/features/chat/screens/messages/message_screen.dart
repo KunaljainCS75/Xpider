@@ -3,13 +3,15 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
+import 'package:xpider_chat/common/emoji/emoji_keyboard.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
+import 'package:xpider_chat/data/contacts/contacts_controller.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
 import 'package:xpider_chat/features/chat/screens/calender/cal.dart';
-import 'package:xpider_chat/features/chat/screens/call/audio_call_screen.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/widgets/type_messages_bar.dart';
+import 'package:xpider_chat/features/chat/screens/messages/widgets/calling_button.dart';
 import 'package:xpider_chat/features/chat/screens/messages/widgets/chat_bubble.dart';
 import 'package:xpider_chat/features/chat/screens/user_profile/user_profile.dart';
 import 'package:xpider_chat/utils/constants/colors.dart';
@@ -21,7 +23,6 @@ import '../../../../utils/popups/loaders.dart';
 import '../../controllers/user_controller.dart';
 import '../../models/chat_message_model.dart';
 import '../../models/thread_model.dart';
-import '../call/video_call_screen.dart';
 
 class MessageScreen extends StatelessWidget {
   const MessageScreen({
@@ -36,6 +37,7 @@ class MessageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final chatController = ChatController.instance;
+    final userController = UserController.instance;
     final messageController = TextEditingController();
 
     final callController = CallController.instance;
@@ -50,13 +52,30 @@ class MessageScreen extends StatelessWidget {
     return WillPopScope(
       onWillPop: () async {
         ChatController.instance.getAllChatRooms();
+        userController.showEmoji.value = false;
         return true;
       },child: Scaffold(
       backgroundColor: Colors.black87,
         /// Message typing area
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton:  TypeMessagesBar(dark: dark,messageController: messageController, chatController: chatController, userModelReceiver: userModelReceiver, isThread:false, thread: ThreadModel.empty(),),
-        /// Chat name
+        floatingActionButton:  Obx(
+          () => SizedBox(
+              height: 500,child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              TypeMessagesBar(dark: dark,messageController: messageController, chatController: chatController, userModelReceiver: userModelReceiver, isThread:false, thread: ThreadModel.empty(),),
+              /// Emojis
+
+               userController.showEmoji.value ? SizedBox(
+                height: THelperFunctions.screenHeight() * 0.35,
+                child: EmojiKeyboard(messageController: messageController, dark: dark)
+              ) : const SizedBox(),
+            ],
+          )),
+        ),
+
+
+        /// Chat Title Bar
         appBar: TAppBar(
           showBackArrow: false,
           bgColor: Colors.grey.shade900,
@@ -67,6 +86,7 @@ class MessageScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
 
+                  /// Pin Button
                   Obx(() => IconButton(onPressed: () async {
                     if (!pinnedChats.contains(userModelReceiver.id)) {
                       pinnedChats.add(userModelReceiver.id);
@@ -85,6 +105,8 @@ class MessageScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: TSizes.spaceBtwItems),
 
+
+                  /// Profile Picture & Name
                   CircularImage(height: 35, width: 35, image: userModelReceiver.profilePicture, isNetworkImage: isNetwork.value),
                   const SizedBox(width: TSizes.spaceBtwItems),
                   Flexible(child: Text(userModelReceiver.fullName, style: Theme.of(context).textTheme.headlineLarge!.apply(fontSizeFactor: .5))),
@@ -92,12 +114,16 @@ class MessageScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          /// Additional Features
           padding: const EdgeInsets.symmetric(horizontal: 0),
           actions: [
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
+
+                  /// Archive Button
                   Obx(() => IconButton(onPressed: () async {
                     if (!archivedChats.contains(userModelReceiver.id)) {
                       archivedChats.add(userModelReceiver.id);
@@ -115,54 +141,20 @@ class MessageScreen extends StatelessWidget {
                         ? const Icon(Icons.arrow_circle_up_rounded, color: Colors.blue) : const Icon(Icons.arrow_circle_down_rounded)),
                   ),
                   const SizedBox(width: TSizes.spaceBtwItems / 2),
+
+                  /// Calender Filter
                   InkWell(
                     radius: 50,
                     onTap: () => Get.to(() => CalenderScreen(userModelReceiver: userModelReceiver)),
                     child: const Icon(Icons.date_range),
                   ),
                   const SizedBox(width: TSizes.spaceBtwItems),
-                  InkWell(
-                    radius: 50,
-                    onTap: () {
 
-                      Get.defaultDialog(
-                          title: "Choose calling type",
-                          middleText: "Call via Video or Audio",
-                          onConfirm: () {
-                            Get.back();
-                          },
-                          confirm: RoundedContainer(
-                            backgroundColor: Colors.black87,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
-                              child: IconButton(
-                                  onPressed: () {
-                                    Get.to(() =>
-                                        AudioCallScreen(receiver: userModelReceiver));
-                                        callController.callUser(UserController.instance.user.value, userModelReceiver, "audio");
-                                        },
-                                  icon: const Icon(Icons.call, color: Colors.green)),
-                            ),
-                          ),
-                          cancel: RoundedContainer(
-                            backgroundColor: Colors.black87,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
-                              child: IconButton(
-                                  onPressed: () {
-                                    Get.to(() =>
-                                        VideoCallScreen(receiver: userModelReceiver));
-                                    callController.callUser(UserController.instance.user.value, userModelReceiver, "video");
-                                  },
-                                  icon: const Icon(Icons.videocam, color: Colors.blue)),
-                            ),
-                          ),
-                          onCancel: () => () => Get.back()
-                      );
-                      },
-                    child: const Icon(Icons.call, color: Colors.green),
-                  ),
+                  /// Calling Button
+                  CallingButton(userModelReceiver: userModelReceiver, callController: callController),
                   const SizedBox(width: TSizes.spaceBtwItems),
+
+                  /// Settings Button
                   InkWell(
                     radius: 50,
                     onTap: () {},
@@ -186,6 +178,7 @@ class MessageScreen extends StatelessWidget {
               ),
             ),
 
+
             /// Stream of Messages
             Padding(
               padding: const EdgeInsets.only(bottom: 70),
@@ -206,7 +199,8 @@ class MessageScreen extends StatelessWidget {
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         final message = snapshot.data![index];
-                        DateTime timestamp = DateTime.parse(message.lastMessageTime);
+                        final encryptedMessageString = snapshot.data![index].senderMessage;
+                        final encryptedMessage = userController.stringToEncrypted(encryptedMessageString);
                         // String formattedTime = DateFormat('hh:mm a').format(timestamp);
                         bool showDate = false;
                         bool isFirstTime = false;
@@ -232,13 +226,15 @@ class MessageScreen extends StatelessWidget {
                             if (showDate)
                               DateTimeTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
                             ChatBubble(
-                              message: message.senderMessage!,
+                              message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                               imageUrl: message.imageUrl!,
                               // isThread: message.thread != ThreadModel.empty(),
                               time: message.lastMessageTime,
                               status: Status.read.toString(),
                               isRead: true,
+                              senderName: message.senderName!,
                               isComing: !(chatController.auth.currentUser!.uid == message.senderId),
+
                             ),
                           ],
                         );
@@ -250,6 +246,8 @@ class MessageScreen extends StatelessWidget {
 
               ),
             ),
+
+
           ],
         ),
 
@@ -260,6 +258,8 @@ class MessageScreen extends StatelessWidget {
     );
   }
 }
+
+
 
 class DateTimeTag extends StatelessWidget {
   const DateTimeTag({
@@ -288,3 +288,41 @@ class DateTimeTag extends StatelessWidget {
 }
 
 
+// /// Emojis
+// Obx(() =>
+//  userController.showEmoji.value ? SizedBox(
+//   height: THelperFunctions.screenHeight() * 0.35,
+//   child: EmojiPicker(
+//     textEditingController: messageController,
+//     onBackspacePressed: () {},
+//     config: Config(
+//       height: 256,
+//       emojiViewConfig: EmojiViewConfig(
+//         backgroundColor: dark ? Colors.blueGrey.shade900 : Colors.white70,
+//         columns: 7,
+//         // Issue: https://github.com/flutter/flutter/issues/28894
+//         emojiSizeMax: 28 *
+//             (Platform.isIOS
+//                 ?  1.20
+//                 :  1.0),
+//       ),
+//       viewOrderConfig: const ViewOrderConfig(
+//         top: EmojiPickerItem.categoryBar,
+//         middle: EmojiPickerItem.emojiView,
+//         bottom: EmojiPickerItem.searchBar,
+//       ),
+//       skinToneConfig: const SkinToneConfig(),
+//       categoryViewConfig: CategoryViewConfig(
+//         backgroundColor: dark ? Colors.blueGrey.shade900 : Colors.white70,
+//         extraTab: CategoryExtraTab.BACKSPACE,
+//       ),
+//       bottomActionBarConfig: const BottomActionBarConfig(
+//         showBackspaceButton: false,
+//         showSearchViewButton: false
+//       ),
+//       searchViewConfig: const SearchViewConfig(),
+//     ),
+//
+//   ),
+// ) : const SizedBox(),
+// )

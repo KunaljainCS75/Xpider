@@ -7,6 +7,7 @@ import 'package:intl/date_symbols.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/thread_controller.dart';
+import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/models/thread_model.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
@@ -35,12 +36,16 @@ class ImageSendScreen extends StatelessWidget {
     final dark = THelperFunctions.isDarkMode(context);
     return Scaffold(
       backgroundColor: Colors.indigo,
+
+      /// AppBar
       appBar: TAppBar(
         title: Text("Send Image", style: Theme.of(context).textTheme.headlineMedium),
         showBackArrow: true,
       ),
       floatingActionButton: WriteCaptionsBox(userModelReceiver: userModelReceiver, messageController: messageController, isThread: isThread, thread: thread,),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
+      /// Body
       body: Obx(
         () => Center(
           child: Column(
@@ -85,62 +90,87 @@ class WriteCaptionsBox extends StatelessWidget {
     final dark = THelperFunctions.isDarkMode(context);
     final chatController = ChatController.instance;
     final threadController = ThreadController.instance;
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: RoundedContainer(
-            backgroundColor: dark? Colors.black87 : TColors.grey,
-            width: MediaQuery.of(context).size.width*.9,
-            height: 55,
-            // padding: const EdgeInsets.symmetric(horizontal: 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined)),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * .55,
-                      child: TextField(
-                        controller: messageController,
-                        textAlign: TextAlign.justify,
+    return PopScope(
+      onPopInvoked: (value) {
+        threadController.selectedImagePath.value = '';
+        chatController.selectedImagePath.value = '';
+      },
 
-                        textInputAction: TextInputAction.newline,
-                        // textAlignVertical: TextAlignVertical.center,
-                        cursorColor: TColors.darkGrey,
-                        cursorHeight: 18,
-                        scrollPhysics: const BouncingScrollPhysics(),
-                        cursorOpacityAnimates: true,
-                        decoration: const InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            border: InputBorder.none,
-                            hintFadeDuration: Duration(milliseconds: 500),
-                            hintText: " Type captions...",
-                            hintStyle: TextStyle(color: TColors.darkGrey)
+      /// Typing Bar
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: RoundedContainer(
+              backgroundColor: dark? Colors.black87 : TColors.grey,
+              width: MediaQuery.of(context).size.width*.9,
+              height: 55,
+              // padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+
+                      /// Emoji
+                      IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined)),
+
+                      /// Captions
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * .55,
+                        child: TextField(
+                          controller: messageController,
+                          textAlign: TextAlign.justify,
+
+                          textInputAction: TextInputAction.newline,
+                          // textAlignVertical: TextAlignVertical.center,
+                          cursorColor: TColors.darkGrey,
+                          cursorHeight: 18,
+                          scrollPhysics: const BouncingScrollPhysics(),
+                          cursorOpacityAnimates: true,
+                          decoration: const InputDecoration(
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              border: InputBorder.none,
+                              hintFadeDuration: Duration(milliseconds: 500),
+                              hintText: " Type captions...",
+                              hintStyle: TextStyle(color: TColors.darkGrey)
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                IconButton(onPressed: () async {
-                  final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-                  chatController.selectedImagePath.value = image!.path;
-                  threadController.selectedImagePath.value = image.path;
-                },
-                    icon: const Icon(Icons.image_search)),
-                IconButton(onPressed: (){
-                    if (isThread) {
-                      threadController.sendThreadMessage(thread, userModelReceiver, messageController.text, threadController.selectedImagePath.value);
-                    } else {
-                      chatController.sendMessage(userModelReceiver.id, userModelReceiver, messageController.text, chatController.selectedImagePath.value);
+                    ],
+                  ),
+
+                  /// Change Image Button
+                  IconButton(onPressed: () async {
+                    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+                    chatController.selectedImagePath.value = image!.path;
+                    threadController.selectedImagePath.value = image.path;
+                  },
+                      icon: const Icon(Icons.image_search)),
+                  IconButton(onPressed: (){
+                    if (messageController.text == ''){
+                      messageController.text = "Image Message";
                     }
-                      messageController.clear();
-                    Get.back();
-                },
-                    icon: const Icon(Icons.send))
-              ],
+                      if (isThread) {
+                        threadController.sendThreadMessage(thread, userModelReceiver,
+                            UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64,
+                            threadController.selectedImagePath.value);
+                      } else {
+                        chatController.sendMessage(
+                            receiver: userModelReceiver,
+                            sender: UserController.instance.user.value,
+                            message: UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64,
+                            imgUrl: chatController.selectedImagePath.value);
+                      }
+                        messageController.clear();
+                      threadController.selectedImagePath.value = '';
+                      chatController.selectedImagePath.value = '';
+                      Get.back();
+                  },
+                      icon: const Icon(Icons.send))
+                ],
+              ),
             ),
-          ),
+      ),
     );
   }
 }

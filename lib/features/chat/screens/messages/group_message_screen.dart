@@ -1,10 +1,15 @@
+import 'dart:io';
+
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
+import 'package:xpider_chat/features/chat/screens/groups/group_profile.dart';
 import 'package:xpider_chat/features/chat/screens/groups/widgets/type_message_bar_group.dart';
 import 'package:xpider_chat/features/chat/screens/messages/widgets/chat_bubble.dart';
 import '../../../../common/custom_shapes/containers/rounded_container.dart';
+import '../../../../common/emoji/emoji_keyboard.dart';
 import '../../../../common/images/circular_images.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/enums.dart';
@@ -32,8 +37,9 @@ class GroupMessageScreen extends StatelessWidget {
     final dark = THelperFunctions.isDarkMode(context);
     final groupController = GroupController.instance;
     final messageController = TextEditingController();
+    final userController = UserController.instance;
 
-    final callController = CallController.instance;
+
 
     RxList<String> archivedGroups = UserController.instance.archivedGroups;
     RxList<String> pinnedGroups = UserController.instance.pinnedGroups;
@@ -43,212 +49,238 @@ class GroupMessageScreen extends StatelessWidget {
       isNetwork = true.obs;
     }
 
-    return Scaffold(
-      backgroundColor: Colors.black87,
-      /// Message typing area
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton:  TypeMessagesBarGroup(dark: dark, messageController: messageController, groupController: groupController, group: group),
-      /// Chat name
-      appBar: TAppBar(
-        showBackArrow: false,
-        bgColor: Colors.grey.shade900,
-        title: InkWell(
-          // onTap: () => Get.to(() => UserProfile(userProfile: group)),
-          child: Obx(
-                () => Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+    return PopScope(
+      onPopInvoked: (canPop){
+        groupController.getAllGroupRooms();
+        userController.showEmoji.value = false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black87,
 
-                Obx(() => IconButton(onPressed: () async {
-                  if (!pinnedGroups.contains(group.id)) {
-                    pinnedGroups.add(group.id);
-                    Loaders.customToast(message: "'${group.groupName}' is added to Pins");
-                  }
-                  else {
-                    pinnedGroups.remove(group.id);
-                    Loaders.customToast(message: "'${group.groupName}' is removed from Pins");
-                  }
-                  await groupController.db.collection("Users")
-                      .doc(groupController.auth.currentUser!.uid)
-                      .update({"PinnedGroups" : pinnedGroups.map((user) => user.toString()).toList()});
+        /// Message typing area
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: Obx(
+              () => SizedBox(
+              height: 500,child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              TypeMessagesBarGroup(dark: dark, messageController: messageController, groupController: groupController, group: group),
 
-                }, icon: pinnedGroups.contains(group.id)
-                    ? const Icon(Icons.star, color: Colors.yellowAccent) : const Icon(Icons.star_border, color: TColors.white)),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems),
-
-                CircularImage(height: 35, width: 35, image: group.groupProfilePicture, isNetworkImage: isNetwork.value),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                Flexible(child: Text(group.groupName, style: Theme.of(context).textTheme.headlineLarge!.apply(fontSizeFactor: .5))),
-              ],
-            ),
-          ),
+              /// Emojis
+              userController.showEmoji.value ? SizedBox(
+                height: THelperFunctions.screenHeight() * 0.35,
+                child: EmojiKeyboard(messageController: messageController, dark: dark),
+              ) : const SizedBox(),
+            ],
+          )),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 0),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Obx(() => IconButton(onPressed: () async {
-                  if (!archivedGroups.contains(group.id)) {
-                    archivedGroups.add(group.id);
-                    Loaders.customToast(message: "'${group.groupName}' is added to Archives");
-                  }
-                  else {
-                    archivedGroups.remove(group.id);
-                    Loaders.customToast(message: "'${group.groupName}' is removed from Archives");
-                  }
-                  await groupController.db.collection("Users")
-                      .doc(groupController.auth.currentUser!.uid)
-                      .update({"ArchivedGroups" : archivedGroups.map((user) => user.toString()).toList()});
+        /// Chat name
+        appBar: TAppBar(
+          showBackArrow: false,
+          bgColor: Colors.grey.shade900,
+          title: InkWell(
+            onTap: () => Get.to(() => GroupProfile(group: group)),
+            child: Obx(
+                  () => Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
 
-                }, icon: archivedGroups.contains(group.id)
-                    ? const Icon(Icons.arrow_circle_up_rounded, color: Colors.blue) : const Icon(Icons.arrow_circle_down_rounded)),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems / 2),
-                InkWell(
-                  radius: 50,
-                  // onTap: () => Get.to(() => CalenderScreen(group: group)),
-                  child: const Icon(Icons.date_range),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                InkWell(
-                  radius: 50,
-                  onTap: () {
+                  Obx(() => IconButton(onPressed: () async {
+                    if (!pinnedGroups.contains(group.id)) {
+                      pinnedGroups.add(group.id);
+                      Loaders.customToast(message: "'${group.groupName}' is added to Pins");
+                    }
+                    else {
+                      pinnedGroups.remove(group.id);
+                      Loaders.customToast(message: "'${group.groupName}' is removed from Pins");
+                    }
+                    await groupController.db.collection("Users")
+                        .doc(groupController.auth.currentUser!.uid)
+                        .update({"PinnedGroups" : pinnedGroups.map((user) => user.toString()).toList()});
 
-                    Get.defaultDialog(
-                        title: "Choose calling type",
-                        middleText: "Call via Video or Audio",
-                        onConfirm: () {
-                          Get.back();
-                        },
-                        confirm: RoundedContainer(
-                          backgroundColor: Colors.black87,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
-                            child: IconButton(
-                                onPressed: () {
-                                  // Get.to(() =>
-                                  //     AudioCallScreen(receiver: group));
-                                  // callController.callUser(UserController.instance.user.value, group, "audio");
-                                },
-                                icon: const Icon(Icons.call, color: Colors.green)),
-                          ),
-                        ),
-                        cancel: RoundedContainer(
-                          backgroundColor: Colors.black87,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
-                            child: IconButton(
-                                onPressed: () {
-                                  // Get.to(() =>
-                                  //     VideoCallScreen(receiver: group));
-                                  // callController.callUser(UserController.instance.user.value, group, "video");
-                                },
-                                icon: const Icon(Icons.videocam, color: Colors.blue)),
-                          ),
-                        ),
-                        onCancel: () => () => Get.back()
-                    );
-                  },
-                  child: const Icon(Icons.call, color: Colors.green),
-                ),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                InkWell(
-                  radius: 50,
-                  onTap: () {},
-                  child: const Icon(Icons.settings),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+                  }, icon: pinnedGroups.contains(group.id)
+                      ? const Icon(Icons.star, color: Colors.yellowAccent) : const Icon(Icons.star_border, color: TColors.white)),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems),
 
-      body: Stack(
-        children: [
-
-          /// Background chat Image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/network/chatBackground.png',
-              fit: BoxFit.cover,
+                  CircularImage(height: 35, width: 35, image: group.groupProfilePicture, isNetworkImage: isNetwork.value),
+                  const SizedBox(width: TSizes.spaceBtwItems),
+                  Flexible(child: Text(group.groupName, style: Theme.of(context).textTheme.headlineLarge!.apply(fontSizeFactor: .5))),
+                ],
+              ),
             ),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 0),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Obx(() => IconButton(onPressed: () async {
+                    if (!archivedGroups.contains(group.id)) {
+                      archivedGroups.add(group.id);
+                      Loaders.customToast(message: "'${group.groupName}' is added to Archives");
+                    }
+                    else {
+                      archivedGroups.remove(group.id);
+                      Loaders.customToast(message: "'${group.groupName}' is removed from Archives");
+                    }
+                    await groupController.db.collection("Users")
+                        .doc(groupController.auth.currentUser!.uid)
+                        .update({"ArchivedGroups" : archivedGroups.map((user) => user.toString()).toList()});
 
-          /// Stream of Messages
-          Padding(
-            padding: const EdgeInsets.only(bottom: 70),
-            child: StreamBuilder<List<GroupMessageModel>>(
-                stream: groupController.getGroupMessages(
-                    memberId:  UserController.instance.user.value.id,
-                    groupId:  group.id),
-                builder: (context, snapshot) {
-                  if(snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  if(snapshot.hasError || snapshot.data == null){
-                    return const Center(child: Text("No messages"));
-                  }
-                  else {
-                    return ListView.builder(
-                      reverse: true,
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        final message = snapshot.data![index];
-                        DateTime timestamp = DateTime.parse(message.lastMessageTime);
-                        // String formattedTime = DateFormat('hh:mm a').format(timestamp);
-                        bool showDate = false;
-                        bool isFirstTime = false;
-                        if (index == snapshot.data!.length - 1){
-                          isFirstTime = true;
-                        }
-                        if (index < snapshot.data!.length - 1) {
-                          // print("$index = ${snapshot.data![index].lastMessageTime.substring(0,10)}");
-                          if (DateTime.parse(snapshot.data![index].lastMessageTime
-                              .substring(0, 10)).isAfter(DateTime.parse(snapshot
-                              .data![index + 1].lastMessageTime.substring(
-                              0, 10)))) {
-                            showDate = true;
-                          }
-                          else {
-                            showDate = false;
-                          }
-                        }
-                        return Column(
-                          children: [
-                            // if (snapshot.data!.isEmpty || index == index - snapshot.data!.length - 1)
-                            if (isFirstTime)
-                              DateTimeTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
-                            if (showDate)
-                              DateTimeTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
-                            ChatBubble(
-                              message: message.senderMessage!,
-                              imageUrl: message.imageUrl!,
-                              // isThread: message.thread != ThreadModel.empty(),
-                              time: message.lastMessageTime,
-                              status: Status.read.toString(),
-                              isRead: true,
-                              isComing: !(groupController.auth.currentUser!.uid == message.senderId),
+                  }, icon: archivedGroups.contains(group.id)
+                      ? const Icon(Icons.arrow_circle_up_rounded, color: Colors.blue) : const Icon(Icons.arrow_circle_down_rounded)),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems / 2),
+                  InkWell(
+                    radius: 50,
+                    // onTap: () => Get.to(() => CalenderScreen(group: group)),
+                    child: const Icon(Icons.date_range),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems),
+                  InkWell(
+                    radius: 50,
+                    onTap: () {
+
+                      Get.defaultDialog(
+                          title: "Choose calling type",
+                          middleText: "Call via Video or Audio",
+                          onConfirm: () {
+                            Get.back();
+                          },
+                          confirm: RoundedContainer(
+                            backgroundColor: Colors.black87,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
+                              child: IconButton(
+                                  onPressed: () {
+                                    // Get.to(() =>
+                                    //     AudioCallScreen(receiver: group));
+                                    // callController.callUser(UserController.instance.user.value, group, "audio");
+                                  },
+                                  icon: const Icon(Icons.call, color: Colors.green)),
                             ),
-                          ],
-                        );
+                          ),
+                          cancel: RoundedContainer(
+                            backgroundColor: Colors.black87,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: TSizes.defaultSpace),
+                              child: IconButton(
+                                  onPressed: () {
+                                    // Get.to(() =>
+                                    //     VideoCallScreen(receiver: group));
+                                    // callController.callUser(UserController.instance.user.value, group, "video");
+                                  },
+                                  icon: const Icon(Icons.videocam, color: Colors.blue)),
+                            ),
+                          ),
+                          onCancel: () => () => Get.back()
+                      );
+                    },
+                    child: const Icon(Icons.call, color: Colors.green),
+                  ),
+                  const SizedBox(width: TSizes.spaceBtwItems),
+                  InkWell(
+                    radius: 50,
+                    onTap: () {},
+                    child: const Icon(Icons.settings),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
 
-                      },
-                    );
-                  }
-                }
+        body: Stack(
+          children: [
 
+            /// Background chat Image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/network/chatBackground.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-        ],
+
+            /// Stream of Messages
+            Padding(
+              padding: const EdgeInsets.only(bottom: 70),
+              child: StreamBuilder<List<GroupMessageModel>>(
+                  stream: groupController.getGroupMessages(
+                      memberId:  UserController.instance.user.value.id,
+                      groupId:  group.id),
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if(snapshot.hasError || snapshot.data == null){
+                      return const Center(child: Text("No messages"));
+                    }
+                    else {
+                      return ListView.builder(
+                        reverse: true,
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+
+                          final message = snapshot.data![index];
+                          final encryptedMessageString = snapshot.data![index].senderMessage;
+                          final encryptedMessage = userController.stringToEncrypted(encryptedMessageString);
+
+                          bool showDate = false;
+                          bool isFirstTime = false;
+                          if (index == snapshot.data!.length - 1){
+                            isFirstTime = true;
+                          }
+                          if (index < snapshot.data!.length - 1) {
+                            // print("$index = ${snapshot.data![index].lastMessageTime.substring(0,10)}");
+                            if (DateTime.parse(snapshot.data![index].lastMessageTime
+                                .substring(0, 10)).isAfter(DateTime.parse(snapshot
+                                .data![index + 1].lastMessageTime.substring(
+                                0, 10)))) {
+                              showDate = true;
+                            }
+                            else {
+                              showDate = false;
+                            }
+                          }
+                          return Column(
+                            children: [
+                              // if (snapshot.data!.isEmpty || index == index - snapshot.data!.length - 1)
+                              if (isFirstTime)
+                                DateTimeTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
+                              if (showDate)
+                                DateTimeTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
+                              ChatBubble(
+                                message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
+                                imageUrl: message.imageUrl!,
+                                // isThread: message.thread != ThreadModel.empty(),
+                                time: message.lastMessageTime,
+                                status: Status.read.toString(),
+                                isRead: true,
+                                senderName: message.senderName!,
+                                isComing: !(groupController.auth.currentUser!.uid == message.senderId),
+                              ),
+                            ],
+                          );
+
+                        },
+                      );
+                    }
+                  }
+
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+
 // Column(
 //   children: [
 //     DateTimeTag(text: group.createdAt.substring(0, 19)),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/data/user/user.dart';
+import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/widgets/type_messages_bar.dart';
 import 'package:xpider_chat/features/chat/screens/messages/widgets/chat_bubble.dart';
 import 'package:xpider_chat/features/chat/screens/user_profile/user_profile.dart';
@@ -31,6 +32,7 @@ class ThreadMessageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final threadController = ThreadController.instance;
+    final userController = UserController.instance;
     final messageController = TextEditingController();
     RxBool isNetwork = false.obs;
     if(userModelReceiver.profilePicture != TImages.user){
@@ -64,12 +66,14 @@ class ThreadMessageScreen extends StatelessWidget {
 
                 CircularImage(height: 35, width: 35, image: userModelReceiver.profilePicture, isNetworkImage: isNetwork.value),
                 const SizedBox(width: TSizes.spaceBtwItems),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(thread.threadName, style: Theme.of(context).textTheme.headlineLarge!.apply(fontSizeFactor: .7)),
-                    Text("(${userModelReceiver.fullName})", style: Theme.of(context).textTheme.labelLarge!.apply(fontSizeFactor: 1)),
-                  ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(thread.threadName, style: Theme.of(context).textTheme.headlineLarge!.apply(fontSizeFactor: .7)),
+                      Text("(${userModelReceiver.fullName})", style: Theme.of(context).textTheme.labelLarge!.apply(fontSizeFactor: 1)),
+                    ],
+                  ),
                 ),
 
               ],
@@ -121,14 +125,16 @@ class ThreadMessageScreen extends StatelessWidget {
                   itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) {
                     final message = snapshot.data![index];
-                    DateTime timestamp = DateTime.parse(message.lastMessageTime);
-                    String formattedTime = DateFormat('hh:mm a').format(timestamp);
+                    final encryptedMessageString = snapshot.data![index].senderMessage;
+                    final encryptedMessage = userController.stringToEncrypted(encryptedMessageString!);
+
                     return ChatBubble(
-                      message: message.senderMessage!,
+                      message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                       imageUrl: message.imageUrl!,
                       // isThread: message.thread != ThreadModel.empty(),
                       time: message.lastMessageTime,
                       status: Status.read.toString(),
+                      senderName: message.senderName!,
                       isRead: true,
                       isComing: !(threadController.auth.currentUser!.uid == message.senderId),
                     );

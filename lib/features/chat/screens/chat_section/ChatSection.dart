@@ -42,7 +42,11 @@ class ChatSectionScreen extends StatelessWidget {
     RxList <ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
     controller.getAllChatRooms();
     chatRooms.assignAll(controller.chatRoomList);
-
+    // final text = UserController.instance.encryptor.encrypt("i am k😍unal jain from ses", iv : UserController.instance.iv);
+    // final text2 = UserController.instance.encryptor.decrypt(text, iv : UserController.instance.iv);
+    // print(text.base64);
+    // print(text.runtimeType);
+    // print(text2);
     return Scaffold
       (
         body: Stack(
@@ -67,7 +71,7 @@ class ChatSectionScreen extends StatelessWidget {
 
                         /// AppBar
                         const ThemeAppBar(),
-                        SizedBox(height: TSizes.spaceBtwItems / 2),
+                        const SizedBox(height: TSizes.spaceBtwItems / 2),
 
                         /// SearchBar
                         SearchBarContainer(text: "Search for messages", textController: textController,
@@ -102,7 +106,14 @@ class ChatSectionScreen extends StatelessWidget {
                             InkWell(
                               highlightColor: Colors.blueAccent.withOpacity(0.5),
                               borderRadius: BorderRadius.circular(100),
-                              onTap: () => Get.to(() => MessageScreen(userModelReceiver: controller.chatRoomList[index].receiver)),
+                              onTap: () {
+                                if (controller.chatRoomList[index].sender.id == UserController.instance.user.value.id){
+                                  Get.to(() => MessageScreen(userModelReceiver: controller.chatRoomList[index].receiver));
+                                }
+                                else{
+                                  Get.to(() => MessageScreen(userModelReceiver: controller.chatRoomList[index].sender));
+                                }
+                              },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
                                 child: SingleChat(chatRoom: controller.chatRoomList[index]),

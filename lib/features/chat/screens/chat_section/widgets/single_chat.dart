@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
+import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/models/chat_room_model.dart';
@@ -19,9 +20,19 @@ class SingleChat extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final chatController = ChatController.instance;
+    final userController = UserController.instance;
     RxList<String> favouriteChats = UserController.instance.favouriteChats;
 
+    final encryptedMessage = userController.stringToEncrypted(chatRoom.lastMessage ?? "Image_Message");
+    final lastMessage = userController.encryptor.decrypt(encryptedMessage, iv: userController.iv);
 
+    final UserModel receiver;
+    if (chatRoom.sender.id != userController.user.value.id){
+      receiver = chatRoom.sender;
+    }
+    else {
+      receiver = chatRoom.receiver;
+    }
     return RoundedContainer(
       backgroundColor: Colors.transparent,
       height: 80,
@@ -31,12 +42,12 @@ class SingleChat extends StatelessWidget {
           Stack(
             children: [
               InkWell(
-                  onTap: () => ChatController.instance.showEnlargedImage(chatRoom.receiver.profilePicture),
-                  child: CircularImage(image: chatRoom.receiver.profilePicture, isNetworkImage: chatRoom.receiver.profilePicture != TImages.user)
+                  onTap: () => ChatController.instance.showEnlargedImage(receiver.profilePicture),
+                  child: CircularImage(image: receiver.profilePicture, isNetworkImage: receiver.profilePicture != TImages.user)
               ),
               Obx(
                 () => Positioned(
-                  child: UserController.instance.pinnedChats.contains(chatRoom.receiver.id)
+                  child: UserController.instance.pinnedChats.contains(receiver.id)
                       ? const Icon(Icons.star, color: Colors.yellow) : const SizedBox(),
                 ),
               )
@@ -50,7 +61,7 @@ class SingleChat extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(chatRoom.receiver.fullName, style: dark? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.78, fontWeightDelta: 2) : Theme.of(context).textTheme.headlineSmall),
+                Text(receiver.fullName, style: dark? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.78, fontWeightDelta: 2) : Theme.of(context).textTheme.headlineSmall),
                  Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -73,7 +84,7 @@ class SingleChat extends StatelessWidget {
                             )),
                       Flexible(
                         child: SizedBox(
-                            child: Text(chatRoom.lastMessage.toString(),
+                            child: Text(lastMessage,
                               style: Theme.of(context).textTheme.titleSmall, overflow: TextOverflow.ellipsis,)),
                       )
                     ],
@@ -87,19 +98,19 @@ class SingleChat extends StatelessWidget {
           Obx(
           () => IconButton(onPressed: () async {
 
-            if (!favouriteChats.contains(chatRoom.receiver.id)) {
-              favouriteChats.add(chatRoom.receiver.id);
-              Loaders.customToast(message: "'${chatRoom.receiver.fullName}' is added to Favourites");
+            if (!favouriteChats.contains(receiver.id)) {
+              favouriteChats.add(receiver.id);
+              Loaders.customToast(message: "'${receiver.fullName}' is added to Favourites");
             }
             else {
-              favouriteChats.remove(chatRoom.receiver.id);
-              Loaders.customToast(message: "'${chatRoom.receiver.fullName}' is removed from Favourites");
+              favouriteChats.remove(receiver.id);
+              Loaders.customToast(message: "'${receiver.fullName}' is removed from Favourites");
             }
             await chatController.db.collection("Users")
                 .doc(chatController.auth.currentUser!.uid)
                 .update({"Favourites" : favouriteChats.map((user) => user.toString()).toList()});
 
-            }, icon: favouriteChats.contains(chatRoom.receiver.id)
+            }, icon: favouriteChats.contains(receiver.id)
                 ? const Icon(Icons.favorite, color: Colors.redAccent) : const Icon(Icons.favorite_border)),
           ),
 

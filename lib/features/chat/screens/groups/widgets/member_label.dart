@@ -22,10 +22,9 @@ class MemberLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final groupMembers = GroupController.instance.groupMembers;
-    final groupAdmins = GroupController.instance.groupAdmins;
     final memberIds = GroupController.instance.memberIds;
     RxBool isAdmin = false.obs;
-    groupAdmins.clear();
+
 
     return Stack(
       alignment: Alignment.bottomCenter,
@@ -44,19 +43,13 @@ class MemberLabel extends StatelessWidget {
                         if (groupMembers.indexOf(user) <= 3) {
                           isAdmin.value = !isAdmin.value;
                           if (isAdmin.value) {
-                            groupAdmins.add(user);
+                            user.admin = true;
                             GroupController.instance.adminSize++;
-                            // GroupController.instance.groupMembers.removeWhere((person) => person.id == user.id);
-                            // GroupController.instance.size--;
                           } else {
-                            groupAdmins.removeWhere((person) =>
-                            person.id == user.id);
+                            user.admin = false;
                             GroupController.instance.adminSize--;
-                            // groupMembers.add(user);
-                            // GroupController.instance.size++;
                           }
                         }
-                        print(groupAdmins.length);
                         print(groupMembers.length);
                       } else {
                         Loaders.customToast(message: "You will be Admin by default");
@@ -67,7 +60,7 @@ class MemberLabel extends StatelessWidget {
                       children: [
                         RoundedContainer(
                           radius: 50,
-                          backgroundColor:   groupMembers.indexOf(user) <= 3 && (isAdmin.value || defaultAdmin) ? Colors.redAccent : Colors.white24,
+                          backgroundColor: groupMembers.indexOf(user) <= 5 && (isAdmin.value || defaultAdmin) ? Colors.redAccent : Colors.white24,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: CircularImage(image: user.profilePicture, isNetworkImage: true),

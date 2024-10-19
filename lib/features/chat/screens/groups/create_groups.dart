@@ -24,7 +24,6 @@ class CreateGroupsScreen extends StatelessWidget {
 
     final groupController = GroupController.instance;
     final group = groupController.groupMembers;
-    final admins = groupController.groupAdmins;
     RxBool isDiscarding = false.obs;
     print('${groupController.adminSize.value}-000');
 
@@ -138,7 +137,25 @@ class CreateGroupsScreen extends StatelessWidget {
                     Obx(
                       () => groupController.size.value > 0
                           ? GroupButtons(icon: Icons.create, label: "Create Group", iconBackgroundColor: Colors.purple,
-                          onTap: () => Get.to(() => const GroupFillDetailsScreen())
+                          onTap: () {
+                            /// Add yourself as Admin by default
+                            final myProfile = UserController.instance.user.value;
+                            final groupMembers = groupController.groupMembers;
+                            if (!groupMembers.contains((person) => person.id == myProfile.id)){
+                              groupMembers.add(
+                                  GroupUserModel(
+                                      id: myProfile.id,
+                                      firstName: myProfile.firstName,
+                                      lastName: myProfile.lastName,
+                                      username: myProfile.username,
+                                      phoneNumber: myProfile.phoneNumber,
+                                      email: myProfile.email,
+                                      profilePicture: myProfile.profilePicture,
+                                      admin: true
+                                  ));
+                            }
+                            Get.to(() => const GroupFillDetailsScreen());
+                          }
                       ) : const SizedBox()
                     ),
                   ],

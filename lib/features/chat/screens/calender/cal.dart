@@ -1,4 +1,3 @@
-import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +11,7 @@ import '../../../../common/custom_shapes/containers/rounded_container.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/enums.dart';
 import '../../controllers/chat_controller.dart';
+import '../../controllers/user_controller.dart';
 import '../../models/chat_message_model.dart';
 import '../messages/widgets/chat_bubble.dart';
 
@@ -23,6 +23,7 @@ class CalenderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isEmpty = true;
     final chatController = ChatController.instance;
+    final userController = UserController.instance;
     return Scaffold(
       backgroundColor: Colors.black87,
       appBar: const TAppBar(
@@ -75,19 +76,21 @@ class CalenderScreen extends StatelessWidget {
                         reverse: true,
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
-
                           final message = snapshot.data![index];
+                          final encryptedMessageString = snapshot.data![index].senderMessage;
+                          final encryptedMessage = userController.stringToEncrypted(encryptedMessageString);
 
                           return Obx(() {
 
                             if (message.lastMessageTime.substring(0, 10) == chatController.selectedDay.value.toString().substring(0, 10)) {
                               isEmpty = false;
                               return ChatBubble(
-                                message: message.senderMessage!,
+                                message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                                 imageUrl: message.imageUrl!,
                                 // isThread: message.thread != ThreadModel.empty(),
                                 time: message.lastMessageTime,
                                 status: Status.read.toString(),
+                                senderName: message.senderName!,
                                 isRead: true,
                                 isComing: !(chatController.auth.currentUser!
                                     .uid == message.senderId),

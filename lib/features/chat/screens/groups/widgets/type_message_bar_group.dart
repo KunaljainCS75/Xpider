@@ -17,7 +17,7 @@ import '../../../controllers/chat_controller.dart';
 import '../../../controllers/group_controller.dart';
 import '../../../controllers/thread_controller.dart';
 import '../../../models/group_chat_model.dart';
-import 'image_send_group_screen.dart';
+import '../../messages/image_send_group_screen.dart';
 
 class TypeMessagesBarGroup extends StatelessWidget {
   TypeMessagesBarGroup({
@@ -35,47 +35,51 @@ class TypeMessagesBarGroup extends StatelessWidget {
   final GroupRoomModel group;
   final userRepository = UserRepository.instance;
 
-
   @override
   Widget build(BuildContext context) {
-    final user = UserController.instance.myGroupProfile();
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          child: RoundedContainer(
+    final userController = UserController.instance;
+    final user = userController.myGroupProfile();
+    return Padding(
+      padding: EdgeInsets.only(left: 5, right: 5, bottom: userController.showEmoji.value ? THelperFunctions.screenHeight() * 0.37 : 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          RoundedContainer(
             backgroundColor: dark? Colors.white24 : TColors.grey,
-            width: MediaQuery.of(context).size.width*.9,
-            height: 55,
+            width: MediaQuery.of(context).size.width*.8,
             // padding: const EdgeInsets.symmetric(horizontal: 0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Row(
-                  children: [
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined)),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * .55,
-                      child: TextField(
-                        controller: messageController,
-                        textAlign: TextAlign.justify,
-
-                        textInputAction: TextInputAction.newline,
-                        // textAlignVertical: TextAlignVertical.center,
-                        cursorColor: TColors.darkGrey,
-                        cursorHeight: 18,
-                        scrollPhysics: const BouncingScrollPhysics(),
-                        cursorOpacityAnimates: true,
-                        decoration: const InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            border: InputBorder.none,
-                            hintFadeDuration: Duration(milliseconds: 500),
-                            hintText: "Send message in group...",
-                            hintStyle: TextStyle(color: TColors.darkGrey)
-                        ),
-                      ),
+                IconButton(onPressed: () {
+                  userController.showEmoji.value = !userController.showEmoji.value;
+                  FocusScope.of(context).unfocus();
+                }, icon: const Icon(Icons.emoji_emotions_outlined)),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * .55,
+                  child: TextField(
+                    controller: messageController,
+                    textAlign: TextAlign.justify,
+                    onTap: () {
+                      userController.showEmoji.value = false;
+                    },
+                    textInputAction: TextInputAction.newline,
+                    // textAlignVertical: TextAlignVertical.center,
+                    cursorColor: TColors.darkGrey,
+                    cursorHeight: 18,
+                    minLines: 1,
+                    maxLines: 4,
+                    scrollPhysics: const BouncingScrollPhysics(),
+                    cursorOpacityAnimates: true,
+                    decoration: const InputDecoration(
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        border: InputBorder.none,
+                        hintFadeDuration: Duration(milliseconds: 500),
+                        hintText: "Send message in group...",
+                        hintStyle: TextStyle(color: TColors.darkGrey)
                     ),
-                  ],
+                  ),
                 ),
 
                 /// Attachment
@@ -150,25 +154,33 @@ class TypeMessagesBarGroup extends StatelessWidget {
                 //       }).toList();
                 //     }
                 // ),
-
-                /// Send Button
-                IconButton(onPressed: (){
-                  if (messageController.text.isNotEmpty){
-                    // isImage.value = false;
-                      groupController.selectedImagePath.value = '';
-                      groupController.sendMessage(group, group.createdBy, user, messageController.text, '');
-                      messageController.clear();
-
-                  }
-                },
-                    icon: const Icon(Icons.send))
               ],
             ),
           ),
-        ),
+          const SizedBox(width: TSizes.spaceBtwItems / 2),
 
+          /// Send Button
+          RoundedContainer(
+            backgroundColor: Colors.red.shade900,
+            radius: 15,
+            height: 45,
+            width: 45,
+            child: IconButton(onPressed: (){
+              if (messageController.text.isNotEmpty){
+                // isImage.value = false;
+                groupController.selectedImagePath.value = '';
+                groupController.sendMessage(
+                    group, group.createdBy, user,
+                    userController.encryptor.encrypt(messageController.text, iv: userController.iv).base64,
+                    '');
+                messageController.clear();
+              }
+            },
+                icon: const Icon(Icons.near_me)),
+          )
 
-      ],
+        ],
+      ),
     );
   }
 }

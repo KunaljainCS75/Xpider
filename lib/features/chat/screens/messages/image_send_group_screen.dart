@@ -9,12 +9,12 @@ import 'package:xpider_chat/features/chat/models/thread_model.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
 
-import '../../../../../common/custom_shapes/containers/rounded_container.dart';
-import '../../../../../utils/constants/colors.dart';
-import '../../../controllers/group_controller.dart';
-import '../../../controllers/user_controller.dart';
-import '../../../models/group_chat_model.dart';
-import '../../../models/group_user_model.dart';
+import '../../../../common/custom_shapes/containers/rounded_container.dart';
+import '../../../../utils/constants/colors.dart';
+import '../../controllers/group_controller.dart';
+import '../../controllers/user_controller.dart';
+import '../../models/group_chat_model.dart';
+import '../../models/group_user_model.dart';
 
 class ImageSendGroupScreen extends StatelessWidget {
   const ImageSendGroupScreen({
@@ -125,7 +125,12 @@ class WriteCaptionsBox extends StatelessWidget {
             },
                 icon: const Icon(Icons.image_search)),
             IconButton(onPressed: (){
-                groupController.sendMessage(group, group.createdBy, user, messageController.text, groupController.selectedImagePath.value);
+              if (messageController.text == ''){
+                messageController.text = "Image_Message";
+              }
+              groupController.sendMessage(
+                group, group.createdBy, user,
+                UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64, groupController.selectedImagePath.value);
 
               messageController.clear();
               Get.back();

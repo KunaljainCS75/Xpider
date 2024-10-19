@@ -55,9 +55,14 @@ class ChatController extends GetxController{
 
 
 
-  Future<void> sendMessage (String targetUserId, UserModel receiver, String message, String? imgUrl) async {
+  Future<void> sendMessage ({
+    required UserModel receiver,
+    required UserModel sender,
+    required String message,
+    String? imgUrl
+  }) async {
     isLoading.value = true;
-    String roomId = getRoomId(targetUserId);
+    String roomId = getRoomId(receiver.id);
     try {
       var newChatMessage = ChatMessageModel(
         id: uuid.v6(),
@@ -65,14 +70,12 @@ class ChatController extends GetxController{
         lastMessageTime: DateTime.now().toString(),
         profileImage: receiver.profilePicture,
         imageUrl: imgUrl,
-        senderId: auth.currentUser!.uid,
-        receiverId: targetUserId,
-        senderName: auth.currentUser!.displayName.toString(),
+        senderId: sender.id,
+        receiverId: receiver.id,
+        senderName: sender.fullName,
         receiverName: receiver.fullName,
         senderMessage: message,
       );
-
-      var sender = await UserRepository.instance.fetchUserDetails();
 
       var roomDetails = ChatRoomModel(
         id: roomId,
@@ -135,8 +138,6 @@ class ChatController extends GetxController{
   }
 
   Future <ChatRoomModel> getChatRoomByUserId(String targetUserId) async {
-    List<ChatRoomModel> roomList = <ChatRoomModel>[];
-
     final room = await db.collection("AllChats").doc(getRoomId(targetUserId)).get();
     final chatroom = ChatRoomModel.fromJson(room);
     return chatroom;
@@ -144,13 +145,19 @@ class ChatController extends GetxController{
 
 
   void getAllChatRooms() async {
-    List<ChatRoomModel> roomList = <ChatRoomModel>[];
+    List<ChatRoomModel> roomList1 = <ChatRoomModel>[];
+    List<ChatRoomModel> roomList2 = <ChatRoomModel>[];
 
-    final rooms = await db.collection("AllChats").where('Sender.Id', isEqualTo: auth.currentUser!.uid).get();
-    roomList = rooms.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
+    final rooms1 = await db.collection("AllChats").where('Sender.Id', isEqualTo: auth.currentUser!.uid).get();
+    final rooms2 = await db.collection("AllChats").where('Receiver.Id', isEqualTo: auth.currentUser!.uid).get();
 
-    chatRoomList.assignAll(roomList);
-    chatRoomListCopy.assignAll(roomList);
+    roomList1 = rooms1.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
+    roomList2 = rooms2.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
+
+    final rooms = roomList1 + roomList2;
+    chatRoomList.assignAll(rooms);
+    chatRoomListCopy.assignAll(rooms);
+    print(rooms.length);
   }
 
   Future <List<ChatRoomModel>> getChatRoomsBySearch (String name) async{

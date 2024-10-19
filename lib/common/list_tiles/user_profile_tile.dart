@@ -25,7 +25,7 @@ class UserProfileTile extends StatelessWidget {
         final image = networkImage.isNotEmpty? networkImage : TImages.user;
         return controller.imageUploading.value?
         const ShimmerLoader(height: 30, width: 30, radius: 80)
-            : CircularImage(fit: BoxFit.cover,image: image, width: 55, height: 55, isNetworkImage: networkImage.isNotEmpty);
+            : CircularImage(fit: BoxFit.cover,image: image, width: 55, height: 55, isNetworkImage:(controller.user.value.profilePicture != TImages.user));
       }),
       title: Text(controller.user.value.fullName, style: !dark? Theme.of(context).textTheme.headlineSmall!.apply(color: Colors.white) : Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: .75, fontWeightDelta: 3)),
       subtitle: Text(controller.user.value.about, style: Theme.of(context).textTheme.bodyMedium!.apply(color: Colors.white)),

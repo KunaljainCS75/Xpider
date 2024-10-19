@@ -19,8 +19,15 @@ class SingleGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final groupController = GroupController.instance;
-    RxList<String> favouriteGroups = UserController.instance.favouriteChats;
+    final userController = UserController.instance;
+    RxList<String> favouriteGroups = UserController.instance.favouriteGroups;
 
+    String lastMessage = '';
+
+    if (group.lastMessage != "group_created" && group.lastMessage != '') {
+      final encryptedMessage = userController.stringToEncrypted(group.lastMessage!);
+      lastMessage = userController.encryptor.decrypt(encryptedMessage, iv: userController.iv);
+    }
 
     return RoundedContainer(
       backgroundColor: Colors.transparent,
@@ -63,7 +70,8 @@ class SingleGroup extends StatelessWidget {
 
                     /// Last Messenger Name
 
-                    Text("${group.lastMessageBy} : ", style: Theme.of(context).textTheme.titleSmall),
+                    if (lastMessage != '')
+                      Text("${group.lastMessageBy} : ", style: Theme.of(context).textTheme.titleSmall),
 
                     /// Last Message
                     // if (group.im != "")
@@ -77,8 +85,8 @@ class SingleGroup extends StatelessWidget {
                     Flexible(
                       child: SizedBox(
                           child: Text(
-                            group.lastMessage != ''
-                                ? group.lastMessage.toString()
+                            lastMessage != ''
+                                ? lastMessage
                                 : "${group.createdBy.firstName} created this group",
                             style: Theme.of(context).textTheme.titleSmall, overflow: TextOverflow.ellipsis,)),
                     )

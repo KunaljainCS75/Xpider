@@ -41,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
                   final image = networkImage.isNotEmpty? networkImage : "assets/images/user/user.png";
                   return controller.imageUploading.value?
                     const ShimmerLoader(height: 120, width: 120, radius: 120, color: Colors.blue,)
-                        : CircularImage(image: image, width: 120, height: 120, isNetworkImage: networkImage.isNotEmpty);
+                        : CircularImage(image: image, width: 120, height: 120, isNetworkImage: (controller.user.value.profilePicture != TImages.user));
                 }),
                 Positioned(
                   bottom: 0,
