@@ -130,30 +130,16 @@ class GroupController extends GetxController{
       }
 
       /// Update GroupRoom details according to to lastMessage;
-      var updatedGroupRoomDetails = GroupRoomModel(
-        id: group.id,
-        groupName: group.groupName,
-        participants: group.participants,
-        createdAt: group.createdAt,
-        createdBy: group.createdBy,
-        status: group.status,
-        lastMessage: message,
-        lastMessageTime: DateTime.now().toString(),
-        lastMessageBy: sender.fullName,
-        isArchived: group.isArchived,
-        isPinned: group.isPinned,
-        isRead: group.isRead,
-        isFavourite: group.isFavourite,
-        groupProfilePicture: group.groupProfilePicture,
-        unreadMessages: group.unreadMessages,
-        groupMessages: group.groupMessages,
-        description: group.description
-      );
+      var updatedGroupRoomDetails = {
+        "LastMessage" : message,
+        "LastMessageTime" : DateTime.now().toString(),
+        "LastMessageBy" : sender.fullName,
+      };
 
       /// Update Group Room Details
       for (var user in group.participants) {
         await db.collection("Users").doc(user.id)
-            .collection("Groups").doc(group.id).update(updatedGroupRoomDetails.toJson());
+            .collection("Groups").doc(group.id).update(updatedGroupRoomDetails);
       }
 
     } catch (e) {

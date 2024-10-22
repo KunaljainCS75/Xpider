@@ -5,10 +5,12 @@ import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
 import 'package:xpider_chat/common/emoji/emoji_keyboard.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
+import 'package:xpider_chat/common/texts/date_format.dart';
 import 'package:xpider_chat/data/contacts/contacts_controller.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
+import 'package:xpider_chat/features/chat/models/chat_room_model.dart';
 import 'package:xpider_chat/features/chat/screens/calender/cal.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/widgets/type_messages_bar.dart';
 import 'package:xpider_chat/features/chat/screens/messages/widgets/calling_button.dart';
@@ -27,11 +29,13 @@ import '../../models/thread_model.dart';
 class MessageScreen extends StatelessWidget {
   const MessageScreen({
     super.key,
+
     required this.userModelReceiver,
 
   });
 
   final UserModel userModelReceiver;
+
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +43,13 @@ class MessageScreen extends StatelessWidget {
     final chatController = ChatController.instance;
     final userController = UserController.instance;
     final messageController = TextEditingController();
-
     final callController = CallController.instance;
 
     RxList<String> archivedChats = UserController.instance.archivedChats;
     RxList<String> pinnedChats = UserController.instance.pinnedChats;
+    RxList<String> favouriteChats = UserController.instance.favouriteChats;
+
+    String roomId = chatController.getRoomId(userModelReceiver.id);
 
     RxBool isNetwork = false.obs;
     if(userModelReceiver.profilePicture != TImages.user){
@@ -88,17 +94,26 @@ class MessageScreen extends StatelessWidget {
 
                   /// Pin Button
                   Obx(() => IconButton(onPressed: () async {
+                    if (!archivedChats.contains(userModelReceiver.id)){
                     if (!pinnedChats.contains(userModelReceiver.id)) {
                       pinnedChats.add(userModelReceiver.id);
+
                       Loaders.customToast(message: "'${userModelReceiver.fullName}' is added to Pins");
+                      await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                          .collection("Chats").doc(roomId).update({"IsPinned" : true});
                     }
                     else {
                       pinnedChats.remove(userModelReceiver.id);
                       Loaders.customToast(message: "'${userModelReceiver.fullName}' is removed from Pins");
+                      await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                          .collection("Chats").doc(roomId).update({"IsPinned" : false});
                     }
                     await chatController.db.collection("Users")
                         .doc(chatController.auth.currentUser!.uid)
                         .update({"PinnedChats" : pinnedChats.map((user) => user.toString()).toList()});
+                    } else {
+                      Loaders.customToast(message: "You need to remove '${userModelReceiver.fullName}' from Archives.");
+                    }
 
                   }, icon: pinnedChats.contains(userModelReceiver.id)
                       ? const Icon(Icons.star, color: Colors.yellowAccent) : const Icon(Icons.star_border, color: TColors.white)),
@@ -125,12 +140,23 @@ class MessageScreen extends StatelessWidget {
 
                   /// Archive Button
                   Obx(() => IconButton(onPressed: () async {
+
+
                     if (!archivedChats.contains(userModelReceiver.id)) {
+                      if ((!favouriteChats.contains(userModelReceiver.id) && !pinnedChats.contains(userModelReceiver.id))){
                       archivedChats.add(userModelReceiver.id);
+                      await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                          .collection("Chats").doc(roomId).update({"IsArchived" : true});
                       Loaders.customToast(message: "'${userModelReceiver.fullName}' is added to Archives");
+                      }
+                      else{
+                        Loaders.customToast(message: "You need to remove '${userModelReceiver.fullName}' from 'Pins' and 'Favourites.'");
+                      }
                     }
                     else {
                       archivedChats.remove(userModelReceiver.id);
+                      await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                          .collection("Chats").doc(roomId).update({"IsArchived" : false});
                       Loaders.customToast(message: "'${userModelReceiver.fullName}' is removed from Archives");
                     }
                     await chatController.db.collection("Users")
@@ -222,9 +248,9 @@ class MessageScreen extends StatelessWidget {
                         return Column(
                           children: [
                             if (isFirstTime)
-                              DateTimeTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
+                              DateTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
                             if (showDate)
-                              DateTimeTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
+                              DateTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
                             ChatBubble(
                               message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                               imageUrl: message.imageUrl!,
@@ -260,32 +286,6 @@ class MessageScreen extends StatelessWidget {
 }
 
 
-
-class DateTimeTag extends StatelessWidget {
-  const DateTimeTag({
-    super.key, required this.text,
-  });
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = THelperFunctions.isDarkMode(context);
-    final date = DateTime.parse(text);
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Center(
-        child: RoundedContainer(
-          backgroundColor: dark ? Colors.blueGrey.shade900 :Colors.white70,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text("${date.day} ${DateFormat.MMMM().format(date)}, ${date.year}",
-        style: Theme.of(context).textTheme.titleMedium!.apply(color: dark ? Colors.white70 :Colors.black87),),
-    ))),
-    );
-  }
-}
 
 
 // /// Emojis

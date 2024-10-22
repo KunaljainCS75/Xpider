@@ -6,19 +6,19 @@ class GroupRoomModel{
   String groupName;
   String? description;
   String? groupProfilePicture;
-  final List<GroupUserModel> participants;
-  final bool isRead;
-  final bool isPinned;
-  final bool isFavourite;
-  final bool isArchived;
+  List<GroupUserModel> participants;
+  bool isRead;
+  bool isPinned;
+  bool isFavourite;
+  bool isArchived;
   final String createdAt;
   final GroupUserModel createdBy;
-  final List<dynamic>? groupMessages;
-  final String? lastMessage;
-  final String? lastMessageTime;
-  final String? lastMessageBy;
-  final String status;
-  final int unreadMessages;
+  List<dynamic>? groupMessages;
+  String? lastMessage;
+  String? lastMessageTime;
+  String? lastMessageBy;
+  String status;
+  int unreadMessages;
 
   GroupRoomModel({
     required this.id,

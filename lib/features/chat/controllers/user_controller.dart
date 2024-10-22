@@ -7,6 +7,11 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:story_view/story_view.dart';
+import 'package:uuid/uuid.dart';
+import 'package:xpider_chat/features/activity/controller/story_controller.dart';
+import 'package:xpider_chat/features/activity/models/status_model.dart';
+import 'package:xpider_chat/features/activity/models/story_model.dart';
 import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
 import '../../../data/repositories/authentication/authentication_repository.dart';
 import '../../../data/repositories/user/user_repository.dart';
@@ -319,17 +324,6 @@ class UserController extends GetxController {
       // Upload Image
       final imageUrl = await userRepository.uploadImage('Users/Images/Profile/', image);
 
-        QuerySnapshot snapshot = await db.collection("AllChats").where('Receiver.Email', isEqualTo: user.value.email).get();
-
-
-        // Logging the number of documents returned
-        // print("Number of chat rooms found: ${snapshot.docs.length}");
-
-        // Iterate over each document and update the profile picture
-        for (var chatRoom in snapshot.docs) {
-          await chatRoom.reference.update({"Receiver.ProfilePicture": imageUrl});
-        }
-
       // Update User Image Record
       Map<String, dynamic> json = {'ProfilePicture': imageUrl};
       await userRepository.updateSingleField(json);
@@ -346,6 +340,11 @@ class UserController extends GetxController {
     }
   }
 
+
+
+  // Future v
+
+  /// Get User from Search
   Future <List<UserModel>> getUsersBySearch (String name) async{
     List <UserModel> resultUsers = [];
     for (var user in users) {

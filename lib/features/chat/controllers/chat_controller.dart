@@ -29,6 +29,7 @@ class ChatController extends GetxController{
   var focusedDay = DateTime.now().obs;
   RxList<ChatRoomModel> chatRoomList = <ChatRoomModel>[].obs;
   RxList<ChatRoomModel> chatRoomListCopy = <ChatRoomModel>[].obs;
+  RxList<ChatRoomModel> pinnedChatRoomList = <ChatRoomModel>[].obs;
   RxString selectedImagePath = ''.obs;
   final RxString selectedSortOption = 'All Chats'.obs;
 
@@ -36,7 +37,6 @@ class ChatController extends GetxController{
   void onInit() {
     super.onInit();
     getAllChatRooms();
-
   }
 
   void onDaySelected(DateTime selectDay, DateTime focusDay) {
@@ -63,7 +63,7 @@ class ChatController extends GetxController{
   }) async {
     isLoading.value = true;
     String roomId = getRoomId(receiver.id);
-    try {
+
       var newChatMessage = ChatMessageModel(
         id: uuid.v6(),
         chatName: receiver.fullName,
@@ -77,33 +77,64 @@ class ChatController extends GetxController{
         senderMessage: message,
       );
 
-      var roomDetails = ChatRoomModel(
+      // Fetch Room Details from both side...
+      var roomSender = await getChatRoomByUserId(sender.id, receiver.id);
+      var roomReceiver = await getChatRoomByUserId(receiver.id, receiver.id);
+
+      var roomDetails1 = ChatRoomModel(
         id: roomId,
         lastMessage: message.toString(),
         lastMessageTime: DateTime.now().toString(),
         sender: sender,
         receiver: receiver,
-        imgUrl: imgUrl
+        imgUrl: imgUrl,
+        isPinned: roomSender.isPinned,
+        isArchived: roomSender.isArchived,
+        isFavourite: roomSender.isFavourite,
+        isRead: roomSender.isRead,
+        unreadMessages: roomSender.unreadMessages,
+        threadCount: roomSender.threadCount
       );
 
-      await db.collection("AllChats").doc(roomId).collection("Messages").doc(
-          newChatMessage.id).set(newChatMessage.toJson());
+      var roomDetails2 = ChatRoomModel(
+          id: roomId,
+          lastMessage: message.toString(),
+          lastMessageTime: DateTime.now().toString(),
+          sender: sender,
+          receiver: receiver,
+          imgUrl: imgUrl,
+          isPinned: roomReceiver.isPinned,
+          isArchived: roomReceiver.isArchived,
+          isFavourite: roomReceiver.isFavourite,
+          isRead: roomReceiver.isRead,
+          unreadMessages: roomReceiver.unreadMessages,
+          threadCount: roomReceiver.threadCount
+      );
 
-      await db.collection("AllChats").doc(roomId).set(roomDetails.toJson());
+      // Update Messages on Both Sides
+      await db.collection("Users").doc(sender.id).collection("Chats").doc(roomId)
+          .collection("Messages").doc(newChatMessage.id).set(newChatMessage.toJson());
 
-    } catch (e) {
-      print(e);
-    }
-    finally{
+      await db.collection("Users").doc(receiver.id).collection("Chats").doc(roomId)
+          .collection("Messages").doc(newChatMessage.id).set(newChatMessage.toJson());
+
+      // Update Room Details on both sides w.r.t. sender and receiver
+      await db.collection("Users").doc(sender.id).collection("Chats").doc(roomId)
+          .set(roomDetails1.toJson());
+
+      await db.collection("Users").doc(receiver.id).collection("Chats").doc(roomId)
+          .set(roomDetails2.toJson());
+
+
       isLoading.value = false;
-    }
+
   }
 
   Stream<List<ChatMessageModel>> getMessages (String targetUserId){
     String roomId = getRoomId(targetUserId);
     
-    return db.collection("AllChats").doc(roomId)
-                    .collection("Messages")
+    return db.collection("Users").doc(auth.currentUser!.uid)
+                    .collection("Chats").doc(roomId).collection("Messages")
                         .orderBy("LastMessageTime", descending: true)
                           .snapshots().map((snapshot) => snapshot.docs.map((doc) => ChatMessageModel.fromSnapshot(doc)
     ).toList());
@@ -137,27 +168,26 @@ class ChatController extends GetxController{
     }
   }
 
-  Future <ChatRoomModel> getChatRoomByUserId(String targetUserId) async {
-    final room = await db.collection("AllChats").doc(getRoomId(targetUserId)).get();
+  Future <ChatRoomModel> getChatRoomByUserId(String userId, String targetUserId) async {
+    final room = await db.collection("Users").doc(userId).collection("Chats").doc(getRoomId(targetUserId)).get();
     final chatroom = ChatRoomModel.fromJson(room);
     return chatroom;
   }
 
 
   void getAllChatRooms() async {
-    List<ChatRoomModel> roomList1 = <ChatRoomModel>[];
-    List<ChatRoomModel> roomList2 = <ChatRoomModel>[];
+    List<ChatRoomModel> roomList = <ChatRoomModel>[];
+    final rooms = await db.collection("Users").doc(auth.currentUser!.uid).collection("Chats").get();
+    roomList = rooms.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
 
-    final rooms1 = await db.collection("AllChats").where('Sender.Id', isEqualTo: auth.currentUser!.uid).get();
-    final rooms2 = await db.collection("AllChats").where('Receiver.Id', isEqualTo: auth.currentUser!.uid).get();
-
-    roomList1 = rooms1.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
-    roomList2 = rooms2.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
-
-    final rooms = roomList1 + roomList2;
-    chatRoomList.assignAll(rooms);
-    chatRoomListCopy.assignAll(rooms);
-    print(rooms.length);
+    chatRoomList.clear();
+    for (var chat in roomList){
+      if (!chat.isArchived){
+        chatRoomList.add(chat);
+      }
+    }
+    chatRoomListCopy.assignAll(roomList);
+    print(roomList.length);
   }
 
   Future <List<ChatRoomModel>> getChatRoomsBySearch (String name) async{
@@ -174,22 +204,32 @@ class ChatController extends GetxController{
   /// Filter Functions
   void showAllChats(){
     chatRoomList.clear();
-    chatRoomList.assignAll(chatRoomListCopy);
+    for (var chat in chatRoomListCopy){
+      if (!chat.isArchived) {
+        chatRoomList.add(chat);
+      }
+    }
   }
 
   Future<void> showPinnedChats() async{
     List <ChatRoomModel> pinnedRooms = <ChatRoomModel>[];
-    for (var chat in UserController.instance.pinnedChats){
-      pinnedRooms.add(await getChatRoomByUserId(chat));
+    for (var chat in chatRoomListCopy) {
+      if (chat.isPinned && !chat.isArchived) {
+        pinnedRooms.add(chat);
+      }
     }
     chatRoomList.clear();
     chatRoomList.assignAll(pinnedRooms);
   }
 
+
+
   Future<void> showFavouriteChats() async{
     List <ChatRoomModel> favouriteRooms = <ChatRoomModel>[];
-    for (var chat in UserController.instance.favouriteChats){
-      favouriteRooms.add(await getChatRoomByUserId(chat));
+    for (var chat in chatRoomListCopy){
+      if (chat.isFavourite && !chat.isArchived) {
+        favouriteRooms.add(chat);
+      }
     }
     chatRoomList.clear();
     chatRoomList.assignAll(favouriteRooms);
@@ -197,8 +237,10 @@ class ChatController extends GetxController{
 
   Future<void> showArchivedChats() async{
     List <ChatRoomModel> archivedRooms = <ChatRoomModel>[];
-    for (var chat in UserController.instance.archivedChats){
-      archivedRooms.add(await getChatRoomByUserId(chat));
+    for (var chat in chatRoomListCopy){
+      if (chat.isArchived){
+        archivedRooms.add(chat);
+      }
     }
     chatRoomList.clear();
     chatRoomList.assignAll(archivedRooms);

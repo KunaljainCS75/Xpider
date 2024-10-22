@@ -11,6 +11,7 @@ import 'package:xpider_chat/features/chat/screens/messages/widgets/chat_bubble.d
 import '../../../../common/custom_shapes/containers/rounded_container.dart';
 import '../../../../common/emoji/emoji_keyboard.dart';
 import '../../../../common/images/circular_images.dart';
+import '../../../../common/texts/date_format.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/enums.dart';
 import '../../../../utils/constants/image_strings.dart';
@@ -38,6 +39,8 @@ class GroupMessageScreen extends StatelessWidget {
     final groupController = GroupController.instance;
     final messageController = TextEditingController();
     final userController = UserController.instance;
+    final db = groupController.db;
+    final auth = groupController.auth;
 
 
 
@@ -85,15 +88,48 @@ class GroupMessageScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
 
+                  /// Pinned Button
                   Obx(() => IconButton(onPressed: () async {
+
+                    /// Checking Conditions
                     if (!pinnedGroups.contains(group.id)) {
-                      pinnedGroups.add(group.id);
-                      Loaders.customToast(message: "'${group.groupName}' is added to Pins");
+                      if (!group.isArchived) {
+
+                        // Add in Pinned List
+                        pinnedGroups.add(group.id);
+
+                        // Set value "True"
+                        group.isPinned = true;
+
+                        // Update Firebase
+                        await db.collection("Users").doc(auth.currentUser!.uid).collection("Groups").doc(group.id).update({"IsPinned": true});
+
+                        // Notify User
+                        Loaders.customToast(message: "'${group.groupName}' is added to Pins");
+
+                      } else {
+
+                        Loaders.customToast(message: "You need to remove '${group.groupName}' from Archives");
+                      }
                     }
+
                     else {
+
+                      // Remove from list
                       pinnedGroups.remove(group.id);
+
+                      // Set Value "False"
+                      group.isPinned = true;
+
+                      // Update Firebase
+                      await db.collection("Users").doc(auth.currentUser!.uid)
+                          .collection("Groups").doc(group.id).update({"IsPinned" : false});
+
+                      // Notify User
                       Loaders.customToast(message: "'${group.groupName}' is removed from Pins");
                     }
+
+                    // Update List at Firebase
                     await groupController.db.collection("Users")
                         .doc(groupController.auth.currentUser!.uid)
                         .update({"PinnedGroups" : pinnedGroups.map((user) => user.toString()).toList()});
@@ -116,17 +152,50 @@ class GroupMessageScreen extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
+
+                  /// Archive Button
                   Obx(() => IconButton(onPressed: () async {
+
+                    /// Checking Conditions
                     if (!archivedGroups.contains(group.id)) {
-                      archivedGroups.add(group.id);
-                      Loaders.customToast(message: "'${group.groupName}' is added to Archives");
+                      if (!(group.isPinned || group.isFavourite)) {
+
+                        // Add in Archive List
+                        archivedGroups.add(group.id);
+
+                        // Set value "True"
+                        group.isArchived = true;
+
+                        // Update Firebase
+                        await db.collection("Users").doc(auth.currentUser!.uid)
+                            .collection("Groups").doc(group.id).update({"IsArchived": true});
+
+                        // Notify User
+                        Loaders.customToast(message: "'${group.groupName}' is added to Archives");
+
+                      } else {
+
+                        // Warning Conditions
+                        Loaders.customToast(message: "First remove '${group.groupName}' from Favourites and Pins");
+                      }
                     }
                     else {
+
+                      // Remove from list
                       archivedGroups.remove(group.id);
+
+                      // Set Value "False"
+                      group.isArchived = false;
+
+                      // Update Firebase
+                      await db.collection("Users").doc(auth.currentUser!.uid).collection("Groups").doc(group.id).update({"IsPinned" : false});
+
+                      // Notify User
                       Loaders.customToast(message: "'${group.groupName}' is removed from Archives");
                     }
-                    await groupController.db.collection("Users")
-                        .doc(groupController.auth.currentUser!.uid)
+
+                    // Update List at Firebase
+                    await groupController.db.collection("Users").doc(groupController.auth.currentUser!.uid)
                         .update({"ArchivedGroups" : archivedGroups.map((user) => user.toString()).toList()});
 
                   }, icon: archivedGroups.contains(group.id)
@@ -250,9 +319,9 @@ class GroupMessageScreen extends StatelessWidget {
                             children: [
                               // if (snapshot.data!.isEmpty || index == index - snapshot.data!.length - 1)
                               if (isFirstTime)
-                                DateTimeTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
+                                DateTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
                               if (showDate)
-                                DateTimeTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
+                                DateTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
                               ChatBubble(
                                 message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                                 imageUrl: message.imageUrl!,

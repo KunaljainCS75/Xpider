@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/common/sort/sort_options.dart';
+import 'package:xpider_chat/data/contacts/contacts_controller.dart';
+import 'package:xpider_chat/data/repositories/user/user_repository.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/models/chat_room_model.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/widgets/home_appbar.dart';
@@ -12,6 +14,7 @@ import 'package:xpider_chat/features/chat/screens/messages/message_screen.dart';
 import '../../../../common/custom_shapes/containers/primary_header_container.dart';
 import '../../../../common/custom_shapes/containers/rounded_container.dart';
 import '../../../../common/custom_shapes/containers/search_container.dart';
+import '../../../../data/user/user.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/constants/text_strings.dart';
@@ -42,6 +45,10 @@ class ChatSectionScreen extends StatelessWidget {
     RxList <ChatRoomModel> chatRooms = <ChatRoomModel>[].obs;
     controller.getAllChatRooms();
     chatRooms.assignAll(controller.chatRoomList);
+
+
+    print(controller.pinnedChatRoomList.length + 999);
+
     // final text = UserController.instance.encryptor.encrypt("i am k😍unal jain from ses", iv : UserController.instance.iv);
     // final text2 = UserController.instance.encryptor.decrypt(text, iv : UserController.instance.iv);
     // print(text.base64);
@@ -93,37 +100,130 @@ class ChatSectionScreen extends StatelessWidget {
                     ),
                   ),
 
-
-                  /// Body (List of Chats)
+                  // Obx(
+                  //       () => controller.pinnedChatRoomList.isNotEmpty
+                  //           ? Column(
+                  //         children: [
+                  // const Padding(
+                  //   padding: EdgeInsets.only(top: 10),
+                  //       child: Text("Pinned Chats"),
+                  //     ),
+                  //
+                  // /// Body (List of Chats)
+                  //  ListView.builder(
+                  //     shrinkWrap: true,
+                  //       padding: const EdgeInsets.all(0),
+                  //       physics: const NeverScrollableScrollPhysics(),
+                  //       itemCount: controller.pinnedChatRoomList.length,
+                  //       itemBuilder: (_, index){
+                  //
+                  //       final pin = controller.pinnedChatRoomList[index];
+                  //       print(pin.id);
+                  //       return Column(
+                  //         children: [
+                  //           InkWell(
+                  //             highlightColor: Colors.blueAccent.withOpacity(0.5),
+                  //             borderRadius: BorderRadius.circular(100),
+                  //             onTap: () {
+                  //               if (pin.sender.id == UserController.instance.user.value.id){
+                  //                 Get.to(() => MessageScreen(userModelReceiver: pin.receiver));
+                  //               }
+                  //               else{
+                  //                 Get.to(() => MessageScreen(userModelReceiver: pin.sender));
+                  //               }
+                  //             },
+                  //             child: Padding(
+                  //               padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
+                  //               child: SingleChat(chatRoom: controller.pinnedChatRoomList[index]),
+                  //             ),
+                  //
+                  //           ),
+                  //         ],
+                  //       );
+                  //     }
+                  //   ),
+                  //   const Divider(color: Colors.white70),
+                  //         ]
+                  // ) : const SizedBox()
+                  //
+                  //
+                  // ),
                   Obx(
-                      () => ListView.builder(
-                      shrinkWrap: true,
+                        () => ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(0),
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: controller.chatRoomList.length,
                         itemBuilder: (_, index){
-                        return Column(
-                          children: [
-                            InkWell(
-                              highlightColor: Colors.blueAccent.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(100),
-                              onTap: () {
-                                if (controller.chatRoomList[index].sender.id == UserController.instance.user.value.id){
-                                  Get.to(() => MessageScreen(userModelReceiver: controller.chatRoomList[index].receiver));
-                                }
-                                else{
-                                  Get.to(() => MessageScreen(userModelReceiver: controller.chatRoomList[index].sender));
-                                }
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
-                                child: SingleChat(chatRoom: controller.chatRoomList[index]),
-                              ),
+                          final chatRoom = controller.chatRoomList[index];
 
-                            ),
-                          ],
-                        );}
+                          if (chatRoom.isPinned) {
+                            return Column(
+                              children: [
+                                InkWell(
+                                  highlightColor: Colors.blueAccent.withOpacity(
+                                      0.5),
+                                  borderRadius: BorderRadius.circular(100),
+                                  onTap: () {
+                                    if (chatRoom.sender.id == UserController.instance.user.value.id) {
+                                      Get.to(() => MessageScreen(userModelReceiver: chatRoom.receiver));
+                                    }
+                                    else {
+                                      Get.to(() => MessageScreen(userModelReceiver: chatRoom.sender));
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
+                                    child: SingleChat(chatRoom: chatRoom),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return const SizedBox();
+                          }
+                        }
                     ),
                   ),
+
+                  Obx(
+                        () => ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(0),
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: controller.chatRoomList.length,
+                        itemBuilder: (_, index){
+                          final chatRoom = controller.chatRoomList[index];
+
+                          if (!chatRoom.isPinned ) {
+                            return Column(
+                              children: [
+                                InkWell(
+                                  highlightColor: Colors.blueAccent.withOpacity(
+                                      0.5),
+                                  borderRadius: BorderRadius.circular(100),
+                                  onTap: () {
+                                    if (chatRoom.sender.id == UserController.instance.user.value.id) {
+                                      Get.to(() => MessageScreen(userModelReceiver: chatRoom.receiver));
+                                    }
+                                    else {
+                                      Get.to(() => MessageScreen(userModelReceiver: chatRoom.sender));
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
+                                    child: SingleChat(chatRoom: chatRoom),
+                                  ),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return const SizedBox();
+                          }
+                        }
+                    ),
+                  ),
+
 
                   /// End Section
                   const Divider(thickness: 1),

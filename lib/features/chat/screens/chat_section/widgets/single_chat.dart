@@ -45,12 +45,13 @@ class SingleChat extends StatelessWidget {
                   onTap: () => ChatController.instance.showEnlargedImage(receiver.profilePicture),
                   child: CircularImage(image: receiver.profilePicture, isNetworkImage: receiver.profilePicture != TImages.user)
               ),
-              Obx(
-                () => Positioned(
-                  child: UserController.instance.pinnedChats.contains(receiver.id)
+
+              /// Pin Star
+              Positioned(
+                  child: chatRoom.isPinned
                       ? const Icon(Icons.star, color: Colors.yellow) : const SizedBox(),
                 ),
-              )
+
             ],
           ),
           const SizedBox(width: TSizes.spaceBtwItems),
@@ -98,19 +99,27 @@ class SingleChat extends StatelessWidget {
           Obx(
           () => IconButton(onPressed: () async {
 
+            if (!chatRoom.isArchived){
             if (!favouriteChats.contains(receiver.id)) {
               favouriteChats.add(receiver.id);
+
               Loaders.customToast(message: "'${receiver.fullName}' is added to Favourites");
+              await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                  .collection("Chats").doc(chatRoom.id).update({"IsFavourite" : true});
             }
             else {
               favouriteChats.remove(receiver.id);
               Loaders.customToast(message: "'${receiver.fullName}' is removed from Favourites");
+              await chatController.db.collection("Users").doc(chatController.auth.currentUser!.uid)
+                  .collection("Chats").doc(chatRoom.id).update({"IsFavourite" : false});
             }
             await chatController.db.collection("Users")
                 .doc(chatController.auth.currentUser!.uid)
                 .update({"Favourites" : favouriteChats.map((user) => user.toString()).toList()});
-
-            }, icon: favouriteChats.contains(receiver.id)
+            } else {
+              Loaders.customToast(message: "First Remove '${receiver.fullName}' from archives.");
+            }
+          }, icon: favouriteChats.contains(receiver.id)
                 ? const Icon(Icons.favorite, color: Colors.redAccent) : const Icon(Icons.favorite_border)),
           ),
 
@@ -124,12 +133,10 @@ class SingleChat extends StatelessWidget {
                 Text(chatRoom.lastMessageTime!.substring(11,16), style: Theme.of(context).textTheme.labelLarge),
               const SizedBox(height: TSizes.defaultSpace / 4),
 
-              /// Pin Symbol && Number of Unreads
+              /// Number of Unreads
               Row(
                 children: [
-                  if(chatRoom.isPinned)
-                    const Icon(Icons.push_pin,size: 20, color: TColors.darkGrey),
-                  const SizedBox(width: 5),
+
                   RoundedContainer(
                     backgroundColor: Colors.green,
                     child: Padding(

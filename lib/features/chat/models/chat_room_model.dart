@@ -7,6 +7,7 @@ class ChatRoomModel{
   final UserModel receiver;
   bool isFavourite;
   bool isPinned;
+  bool isArchived;
   final int threadCount;
   bool isRead;
   final String? lastMessageTime;
@@ -22,6 +23,7 @@ class ChatRoomModel{
     this.lastMessage,
     this.isPinned = false,
     this.isRead = true,
+    this.isArchived = false,
     this.threadCount = 0,
     this.isFavourite = false,
     this.unreadMessages = 0,
@@ -39,6 +41,7 @@ class ChatRoomModel{
       'Receiver' : receiver.toJson(),
       'IsPinned' : isPinned,
       'IsRead' : isRead,
+      'IsArchived' : isArchived,
       'ThreadCount' : threadCount,
       'UnreadMessages' : unreadMessages,
       'LastMessageTime' : lastMessageTime,
@@ -50,10 +53,12 @@ class ChatRoomModel{
 
   /// Map JSON Oriented document snapshot from FireBase to UserModel
   factory ChatRoomModel.fromJson(DocumentSnapshot<Map<String, dynamic>> document) {
+
+    if (document.data() == null) return ChatRoomModel.empty();
     final data = document.data()!;
-    if (data.isEmpty) return ChatRoomModel.empty();
     return ChatRoomModel(
       id: data['Id'] ?? '',
+      isArchived: data['IsArchived'] ?? false,
       threadCount: data['ThreadCount'] ?? 0,
       sender: UserModel.fromJson(data['Sender']),
       receiver: UserModel.fromJson(data['Receiver']),

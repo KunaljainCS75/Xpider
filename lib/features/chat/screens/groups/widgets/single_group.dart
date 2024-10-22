@@ -19,6 +19,8 @@ class SingleGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = THelperFunctions.isDarkMode(context);
     final groupController = GroupController.instance;
+    final db = GroupController.instance.db;
+    final auth = GroupController.instance.auth;
     final userController = UserController.instance;
     RxList<String> favouriteGroups = UserController.instance.favouriteGroups;
 
@@ -99,17 +101,49 @@ class SingleGroup extends StatelessWidget {
 
           /// Favourites
           Obx(
-                () => IconButton(onPressed: () async {
+             () => IconButton(onPressed: () async {
 
-              if (!favouriteGroups.contains(group.id)) {
-                favouriteGroups.add(group.id);
-                Loaders.customToast(message: "'${group.groupName}' is added to Favourites");
-              }
-              else {
-                favouriteGroups.remove(group.id);
-                Loaders.customToast(message: "'${group.groupName}' is removed from Favourites");
-              }
-              await groupController.db.collection("Users")
+               /// Checking Conditions
+               if (!favouriteGroups.contains(group.id)) {
+                  if (!group.isArchived){
+
+                    // Add in Favourite List
+                    favouriteGroups.add(group.id);
+
+                    // Set value "True"
+                    group.isFavourite = true;
+
+                    // Update Firebase
+                    await groupController.db.collection("Users").doc(auth.currentUser!.uid)
+                        .collection("Groups").doc(group.id).update({"IsFavourite" : true});
+
+                    // Notify User
+                    Loaders.customToast(message: "'${group.groupName}' is added to Favourites");
+
+                  } else {
+
+                    // Warning Conditions
+                    Loaders.customToast(message: "You need to remove '${group.groupName}' from Archives");
+                  }
+                }
+                else {
+
+                  // Remove from list
+                  favouriteGroups.remove(group.id);
+
+                  // Set Value "False"
+                  group.isFavourite = false;
+
+                  // Update Firebase
+                  await db.collection("Users").doc(auth.currentUser!.uid)
+                      .collection("Groups").doc(group.id).update({"IsFavourite" : false});
+
+                  // Notify User
+                  Loaders.customToast(message: "'${group.groupName}' is removed from Favourites");
+                }
+
+              // Update List at Firebase
+              await db.collection("Users")
                   .doc(UserController.instance.auth.currentUser!.uid)
                   .update({"FavouriteGroups" : favouriteGroups.map((user) => user.toString()).toList()});
 
@@ -133,8 +167,6 @@ class SingleGroup extends StatelessWidget {
               /// Pin Symbol && Number of Unreads
               Row(
                 children: [
-                  if(group.isPinned)
-                    const Icon(Icons.push_pin,size: 20, color: TColors.darkGrey),
                   const SizedBox(width: 5),
                   RoundedContainer(
                     backgroundColor: Colors.green,

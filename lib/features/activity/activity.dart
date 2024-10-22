@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:get/get.dart';
+import 'package:story_view/controller/story_controller.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
-import 'package:xpider_chat/common/images/rounded_images.dart';
+import 'package:xpider_chat/features/activity/controller/story_controller.dart';
+import 'package:xpider_chat/features/activity/status/add_story_screen.dart';
 import 'package:xpider_chat/features/activity/status/status_screen.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
-
-import '../../common/appbar/tabbar.dart';
 import '../../common/custom_shapes/containers/primary_header_container.dart';
 import '../../common/custom_shapes/containers/rounded_container.dart';
-import '../../common/custom_shapes/containers/search_container.dart';
 import '../../utils/constants/colors.dart';
-import '../../utils/constants/enums.dart';
 import '../../utils/constants/sizes.dart';
-import '../chat/screens/chat_section/widgets/home_appbar.dart';
 import 'calls/call_logs_screen.dart';
 
 class ActivityScreen extends StatelessWidget {
@@ -30,6 +25,15 @@ class ActivityScreen extends StatelessWidget {
     RxDouble turns = 0.0.obs;
 
     return Scaffold(
+        floatingActionButton: (index.value == 0)
+            ? RoundedContainer(
+          backgroundColor: Colors.black87,
+          child: InkWell(
+            child: const Icon(Icons.add, color: Colors.yellow, size: 50),
+            onTap: () => Get.to(() => const AddStoryScreen()),
+          ),
+        )
+            : const SizedBox(),
         body: Stack(children: [
       RoundedContainer(
         backgroundColor: Colors.transparent,
@@ -58,7 +62,12 @@ class ActivityScreen extends StatelessWidget {
                             () => AnimatedRotation(turns: turns.value, duration: const Duration(seconds: 1), child: IconButton(
                             onPressed: () {
                               turns.value += 1;
-                              CallController.instance.getAllCalls();
+                              if (index.value == 1) {
+                                CallController.instance.getAllCalls();
+                              } else {
+                                StoryViewController.instance.fetchFriendStories();
+                                    index.value = 0;
+                              }
                               }, icon: const Icon
                           (Icons.refresh)
                         ),),

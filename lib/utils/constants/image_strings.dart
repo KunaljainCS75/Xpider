@@ -31,6 +31,7 @@ class TImages {
   //Profile
   static const String user = "assets/images/user/user.png";
   static const String group = "assets/images/user/group.png";
+  static const String status =  "https://cdn.iconscout.com/icon/free/png-256/whatsapp-status-6823353-5582735.png";
 
 
 }

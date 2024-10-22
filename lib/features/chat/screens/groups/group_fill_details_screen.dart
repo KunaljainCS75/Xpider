@@ -98,7 +98,7 @@ class GroupFillDetailsScreen extends StatelessWidget {
                       () => isImageUploading.value ?
                       const ShimmerLoader(height: 120, width: 120, radius: 120, color: Colors.blue,)
                           :  CircularImage(
-                          isNetworkImage: isNetworkImage.value,
+                          isNetworkImage: isNetworkImage.value, fit: BoxFit.cover,
                           height: 120, width: 120,
                           image: imageUrl.value
                       )
