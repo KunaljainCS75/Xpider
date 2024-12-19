@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:xpider_chat/common/sort/sort_options.dart';
 import 'package:xpider_chat/data/contacts/contacts_controller.dart';
 import 'package:xpider_chat/data/repositories/user/user_repository.dart';
@@ -46,7 +47,6 @@ class ChatSectionScreen extends StatelessWidget {
     controller.getAllChatRooms();
     chatRooms.assignAll(controller.chatRoomList);
 
-
     print(controller.pinnedChatRoomList.length + 999);
 
     // final text = UserController.instance.encryptor.encrypt("i am k😍unal jain from ses", iv : UserController.instance.iv);
@@ -77,11 +77,11 @@ class ChatSectionScreen extends StatelessWidget {
                       children: [
 
                         /// AppBar
-                        const ThemeAppBar(),
+                        const ThemeAppBar(textTitle: "Xpider"),
                         const SizedBox(height: TSizes.spaceBtwItems / 2),
 
                         /// SearchBar
-                        SearchBarContainer(text: "Search for messages", textController: textController,
+                        SearchBarContainer(text: "Search...", textController: textController,
                         onChanged: (value) async {
                           searchesChatRooms = controller.chatRoomList;
                           searchesChatRooms = await controller.getChatRoomsBySearch(textController.text);

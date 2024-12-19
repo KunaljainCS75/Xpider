@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
@@ -12,6 +13,7 @@ import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
 
 import '../../../../../data/user/user.dart';
+import '../../../../../utils/constants/image_strings.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
@@ -69,8 +71,8 @@ class ChatBubble extends StatelessWidget {
                                 maxHeight: THelperFunctions.screenHeight() / 2,
                                 maxWidth: THelperFunctions.screenWidth() / 1.5
                               ),
-                              child: Image.file(File(imageUrl))),
-                        ),
+                              child: CachedNetworkImage(imageUrl: imageUrl),
+                        )),
 
                       /// Text Message Outline
                       message.isNotEmpty ? Text(message, style: Theme.of(context).textTheme.titleSmall)
@@ -84,13 +86,10 @@ class ChatBubble extends StatelessWidget {
                 mainAxisAlignment:
                 isComing ? MainAxisAlignment.start : MainAxisAlignment.end,
                 children: [
-                  Text(time.substring(11, 16),
-                      style: Theme
-                          .of(context)
-                          .textTheme
-                          .labelLarge),
-                  const SizedBox(width: TSizes.spaceBtwItems),
-                  const Icon(Icons.check_outlined)
+                  Text("$time  ",
+                      style: Theme.of(context).textTheme.labelLarge),
+                  if (!isComing)
+                    Image.asset(isRead? TImages.doubleTick : TImages.singleTick, height: 20,  width: 20, color: isRead ? Colors.blueAccent : Colors.white60)
                 ],
               ),
             ],

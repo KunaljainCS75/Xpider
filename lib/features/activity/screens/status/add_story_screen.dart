@@ -1,25 +1,19 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:story_view/widgets/story_view.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/activity/controller/status_controller.dart';
 import 'package:xpider_chat/features/activity/controller/story_controller.dart';
-import 'package:xpider_chat/features/activity/status/status_screen.dart';
-import 'package:xpider_chat/features/activity/status/widgets/story_caption_type_bar.dart';
-import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
+import 'package:xpider_chat/features/activity/screens/status/widgets/story_caption_type_bar.dart';
 import 'package:xpider_chat/utils/constants/colors.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
 
-import '../../../common/custom_shapes/containers/rounded_container.dart';
-import '../../../utils/helpers/helper_functions.dart';
-import '../../../utils/popups/loaders.dart';
+import '../../../../common/custom_shapes/containers/rounded_container.dart';
+import '../../../../utils/helpers/helper_functions.dart';
+import '../../../../utils/popups/loaders.dart';
 
 class AddStoryScreen extends StatelessWidget {
   const AddStoryScreen({super.key});
@@ -32,13 +26,11 @@ class AddStoryScreen extends StatelessWidget {
     List<Color> colors = <Color>[
       TColors.primary,
       Colors.deepOrange,
-      Colors.yellow.shade700,
-      Colors.red.shade800,
-      Colors.black54,
       Colors.blue,
+      Colors.red.shade800,
+      Colors.yellow.shade700,
       Colors.purple,
-      Colors.brown,
-      Colors.pink,
+      Colors.black54,
     ];
     RxInt index = 0.obs;
     XFile? image;
@@ -89,7 +81,7 @@ class AddStoryScreen extends StatelessWidget {
 
                       } else {
                         if (captionController.text.isNotEmpty) {
-                          await statusController.uploadUserStory(color: colors[index.value], captions: captionController.text);
+                          await statusController.uploadUserStory(color: index.value, captions: captionController.text);
                           StoryItem story = StoryItem.text(
                               title: captionController.text,
                               backgroundColor: colors[index.value]
@@ -125,7 +117,7 @@ class AddStoryScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(TSizes.defaultSpace / 3),
                         backgroundColor: TColors.black,
                         child: SizedBox(height: 300, width: THelperFunctions.screenWidth(),
-                            child: Image.file(File(controller.storyViewImage.value), fit: BoxFit.fitHeight))),
+                            child: Image.file(File(controller.storyViewImage.value), fit: BoxFit.fitWidth))),
                     const SizedBox(height: TSizes.defaultSpace),
 
                   ],

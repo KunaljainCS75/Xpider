@@ -121,6 +121,7 @@ class TypeMessagesBarGroup extends StatelessWidget {
                                   Get.back();
                                   Get.to(() =>  ImageSendGroupScreen(messageController: messageController, group: group));
                                   groupController.selectedImagePath.value = image.path;
+                                  groupController.selectedImage = image;
                                 }
                               },  icon: Iconsax.gallery, backgroundColor: Colors.green.shade700, buttonLabel: "Gallery"),
                             ],
@@ -171,8 +172,7 @@ class TypeMessagesBarGroup extends StatelessWidget {
                 groupController.selectedImagePath.value = '';
                 groupController.sendMessage(
                     group, group.createdBy, user,
-                    userController.encryptor.encrypt(messageController.text, iv: userController.iv).base64,
-                    '');
+                    userController.encryptor.encrypt(messageController.text, iv: userController.iv).base64, null);
                 messageController.clear();
               }
             },

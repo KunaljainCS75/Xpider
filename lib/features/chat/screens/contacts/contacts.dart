@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -46,13 +48,26 @@ class Contacts extends StatelessWidget {
     }
     final userController = UserController.instance;
 
+    List<Color> colorList = [
+      Colors.red,
+      Colors.green,
+      Colors.brown,
+      Colors.blue.shade400,
+      Colors.black
+    ];
+
+    final random = Random();
+
     return  Scaffold(
         appBar: TAppBar(
           title: Text("Select a Contact", style: Theme.of(context).textTheme.headlineMedium,),
           actions: [
             Obx(() =>  IconButton(
               icon: isSearchEnable.value ? const Icon(Iconsax.close_circle) : const Icon(Iconsax.search_normal),
-              onPressed: () => isSearchEnable.value = !isSearchEnable.value))
+              onPressed: () {
+                isSearchEnable.value = !isSearchEnable.value;
+              }
+            ))
           ],
         ),
         body: SingleChildScrollView(
@@ -122,12 +137,13 @@ class Contacts extends StatelessWidget {
                         contacts.clear();
                         contacts.assignAll(searchesContacts);
                       },
-                      padding: EdgeInsets.symmetric(horizontal: 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
                     ),
                     const SizedBox(height: TSizes.spaceBtwItems),
                   ],
                 )
                 ),
+
                 /// Contacts List
                 SingleChildScrollView(
                   child: Column(
@@ -140,9 +156,8 @@ class Contacts extends StatelessWidget {
                           itemCount: contacts.length,
                           itemBuilder: (_, index) {
                             final contact = contacts[index];
-                            print(contact.phones![0].value);
-                            final networkImage = UserController.instance.user.value.profilePicture;
-                            final image = networkImage.isNotEmpty? networkImage : TImages.user;
+                            var image = contact.avatar;
+
 
                             // final isPersonOnXpider;
                             // if(userController.users.map((user) => user.formattedPhoneNo).toString() == contact.phones![0].value!.toString()){
@@ -163,8 +178,6 @@ class Contacts extends StatelessWidget {
                                       for (var user in userController.users){
                                         if (user.phoneNumber == contact.phones![0].value?.replaceAll(" ", '').substring(3)){
                                           receiver = user;
-                                          print(user.phoneNumber);
-                                          invite = false;
                                         }
                                       }
 
@@ -189,7 +202,7 @@ class Contacts extends StatelessWidget {
                                         //     ),
                                         //     onCancel: () => () => Get.back()
                                         // );
-
+                                      invite = false;
                                       if (!invite) {
                                         Get.to(() => MessageScreen(userModelReceiver: receiver!));
                                       }
@@ -203,6 +216,8 @@ class Contacts extends StatelessWidget {
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: TSizes.defaultSpace / 4),
                                     child: RoundedContainer(
+                                      showBorder: true,
+                                      borderColor: Colors.white12,
                                       backgroundColor: Colors.blue.withOpacity(0.2),
                                       child: Padding(
                                         padding: const EdgeInsets.all(8.0),
@@ -210,9 +225,13 @@ class Contacts extends StatelessWidget {
                                             Row(
 
                                               children: [
-                                                CircleAvatar(
-                                                  child: userController.imageUploading.value? const ShimmerLoader(height: 80, width: 80, radius: 80)
-                                                      : CircularImage(image: image, width: 80, height: 80, isNetworkImage: networkImage.isNotEmpty)
+                                                userController.imageUploading.value
+                                                    ? const ShimmerLoader(height: 80, width: 80, radius: 80)
+                                                    : CircleAvatar(
+                                                  backgroundColor: colorList[random.nextInt(colorList.length)],
+                                                            child: (image != null && image.isNotEmpty)
+                                                                ? ClipOval(child: Image.memory(image))
+                                                                : Text(contact.displayName!.substring(0, 1))
                                                 ),
                                                 const SizedBox(width: TSizes.spaceBtwItems),
                                                 Flexible(
@@ -248,7 +267,7 @@ class Contacts extends StatelessWidget {
                           }
                         ),
                       ),
-                      SizedBox(height: TSizes.spaceBtwSections)
+                      const SizedBox(height: TSizes.spaceBtwSections)
                     ],
                   ),
                 ),

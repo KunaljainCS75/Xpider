@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'app.dart';
@@ -10,6 +11,9 @@ import 'firebase_options.dart';
 /// ---- ENTRY POINT OF FLUTTER APP ----
 Future<void> main() async {
 
+  /// env
+  await dotenv.load();
+  print(dotenv.env["API_ID"]);
 
   /// -- Add Widgets Binding
   final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();

@@ -31,8 +31,10 @@ class TImages {
   //Profile
   static const String user = "assets/images/user/user.png";
   static const String group = "assets/images/user/group.png";
-  static const String status =  "https://cdn.iconscout.com/icon/free/png-256/whatsapp-status-6823353-5582735.png";
+  static const String status = "https://cdn.iconscout.com/icon/free/png-256/whatsapp-status-6823353-5582735.png";
 
-
+  ///Messages
+  static const String doubleTick = "assets/icons/messages/double_tick.png";
+  static const String singleTick = "assets/icons/messages/single_tick.png";
+  static const String unreadBorder = "assets/images/container/octagon.png";
 }
-

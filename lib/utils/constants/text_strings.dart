@@ -14,11 +14,11 @@ class TTexts {
   // -- OnBoarding Texts
   static const String onBoardingTitle1 = "Start creating network";
   static const String onBoardingTitle2 = "Find your friends";
-  static const String onBoardingTitle3 = "Remain Anonymous";
+  static const String onBoardingTitle3 = "Join the Conversation";
 
   static const String onBoardingSubTitle1 = "Welcome to the World of Xpider Network - Start finding your friends";
   static const String onBoardingSubTitle2 = "Talk and connect with your friends and family with an interactive UI";
-  static const String onBoardingSubTitle3 = "Choose who can see your profile";
+  static const String onBoardingSubTitle3 = "Create threads and rooms with your friends";
 
 
   // -- Authentication Forms

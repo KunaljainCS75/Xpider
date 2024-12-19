@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 class StoryModel{
   final String? captions;
-  final String? color;
+  final int? color;
   final String? imageUrl;
   final String type;
   final String createdAt;
@@ -21,7 +21,7 @@ class StoryModel{
   toJson() {
     return {
       "Captions" : captions,
-      "Color" : color.toString(),
+      "Color" : color,
       "ImageUrl" : imageUrl,
       "Type" : type,
       "CreatedAt" : createdAt
@@ -38,7 +38,7 @@ class StoryModel{
     return StoryModel(
       captions: data["Captions"] ?? '',
       imageUrl: data["ImageUrl"] ?? '',
-      color: data["Color"] ?? "Black",
+      color: data["Color"] ?? 0,
       createdAt: data["CreatedAt"] ?? '',
       type: data["Type"] ?? ''
     );

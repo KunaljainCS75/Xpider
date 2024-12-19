@@ -9,21 +9,22 @@ import '../../../models/group_user_model.dart';
 class ParticipantsListTile extends StatelessWidget {
   const ParticipantsListTile({
     super.key,
-    required this.person,
+    required this.person, this.isCreator = false,
   });
 
   final GroupUserModel person;
+  final bool isCreator;
 
   @override
   Widget build(BuildContext context) {
     final String position;
     final Color positionBackgroundColor, positionLabelColor;
 
-    if (person.admin){
-      position = "Leader";
+    if (person.position == "Admin"){
+      position = "Admin";
       positionBackgroundColor = TColors.primary.withOpacity(0.3);
       positionLabelColor = Colors.greenAccent;
-    } else if (person.editor) {
+    } else if (person.position == "Editor") {
       position = "Editor";
       positionBackgroundColor = Colors.yellow.withOpacity(0.3);
       positionLabelColor = Colors.yellowAccent;
@@ -38,13 +39,15 @@ class ParticipantsListTile extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircularImage(image: person.profilePicture, isNetworkImage: true, height: 50, width: 50),
+            CircularImage(image: person.profilePicture, isNetworkImage: true, height: 50, width: 50, backgroundColor: Colors.black87),
             const SizedBox(width: TSizes.spaceBtwItems / 2),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(person.fullName, style: Theme.of(context).textTheme.titleMedium),
-                Text(position, style: TextStyle(color: positionLabelColor)),
+                !isCreator
+                    ? Text(position, style: TextStyle(color: positionLabelColor))
+                    : const Text("Master Admin", style: TextStyle(fontWeight: FontWeight.w500, color: Colors.redAccent))
               ],
             ),
           ],

@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
-import 'package:xpider_chat/common/images/rounded_images.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/screens/messages/message_screen.dart';
-import 'package:xpider_chat/features/personalization/screens/profile/widget/change_name.dart';
-import 'package:xpider_chat/utils/constants/colors.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
-
 import '../../../../common/buttons/functional_buttons.dart';
 import '../../../../common/containers/icon_container.dart';
 import '../../../../utils/constants/image_strings.dart';

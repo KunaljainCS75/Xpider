@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:xpider_chat/features/chat/screens/contacts/contacts.dart';
 import 'package:xpider_chat/data/contacts/contacts_controller.dart';
 import 'package:xpider_chat/features/chat/screens/groups/xpider_members.dart';
@@ -16,10 +17,10 @@ import '../../../controllers/chat_controller.dart';
 
 class ThemeAppBar extends StatelessWidget {
   const ThemeAppBar({
-    super.key,
+    super.key, required this.textTitle,
   });
 
-
+  final String textTitle;
   @override
   Widget build(BuildContext context) {
     RxDouble turns = 0.0.obs;
@@ -31,7 +32,7 @@ class ThemeAppBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-              TTexts.homeAppbarTitle,
+              textTitle,
               style: GoogleFonts.merienda(
                   textStyle: Theme.of(context).textTheme.headlineMedium!.apply(
                       color: TColors.white, fontWeightDelta: 2))
@@ -49,13 +50,20 @@ class ThemeAppBar extends StatelessWidget {
         ],
       ),
       actions: [
-        IconButton(onPressed: () => Get.to(() => const Contacts(), transition: Transition.fade, duration: Duration(milliseconds: 950)), icon: const Icon(Icons.add, color: Colors.white)),
+        IconButton(onPressed: () async {
+          ContactsController.instance.getContactPermission();
+          final contactPermissionStatus = await Permission.contacts.status;
+          if (contactPermissionStatus.isGranted) {
+            Get.to(() => const Contacts(), transition: Transition.fade, duration: const Duration(milliseconds: 950));
+          }
+        }, icon: const Icon(Icons.add, color: Colors.white)),
         IconButton(onPressed: () => Get.to(() => const XpiderMembersScreen()), icon: const Icon(Iconsax.menu, color: TColors.white)),
         Obx(
         () => AnimatedRotation(turns: turns.value, duration: const Duration(seconds: 1), child: IconButton(
               onPressed: () {
                 turns.value += 1;
-                controller.getAllChatRooms();}, icon: const Icon
+                controller.getAllChatRooms();
+                }, icon: const Icon
               (Icons.refresh, color: TColors.white)
           ),),
         )

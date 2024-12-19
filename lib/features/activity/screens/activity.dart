@@ -3,15 +3,15 @@ import 'package:get/get.dart';
 import 'package:story_view/controller/story_controller.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/activity/controller/story_controller.dart';
-import 'package:xpider_chat/features/activity/status/add_story_screen.dart';
-import 'package:xpider_chat/features/activity/status/status_screen.dart';
+import 'package:xpider_chat/features/activity/screens/calls/call_logs_screen.dart';
+import 'package:xpider_chat/features/activity/screens/status/add_story_screen.dart';
+import 'package:xpider_chat/features/activity/screens/status/status_screen.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
-import '../../common/custom_shapes/containers/primary_header_container.dart';
-import '../../common/custom_shapes/containers/rounded_container.dart';
-import '../../utils/constants/colors.dart';
-import '../../utils/constants/sizes.dart';
-import 'calls/call_logs_screen.dart';
+import '../../../common/custom_shapes/containers/primary_header_container.dart';
+import '../../../common/custom_shapes/containers/rounded_container.dart';
+import '../../../utils/constants/colors.dart';
+import '../../../utils/constants/sizes.dart';
 
 class ActivityScreen extends StatelessWidget {
   const ActivityScreen({super.key});

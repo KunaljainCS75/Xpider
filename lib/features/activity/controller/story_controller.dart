@@ -10,6 +10,8 @@ import 'package:xpider_chat/features/activity/controller/status_controller.dart'
 import 'package:xpider_chat/features/activity/models/story_model.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 
+import '../../../utils/constants/colors.dart';
+
 class StoryViewController extends GetxController{
   static StoryViewController get instance => Get.find();
 
@@ -29,6 +31,7 @@ class StoryViewController extends GetxController{
   void onInit() {
     super.onInit();
     fetchMyStories();
+    print("My ------->" + friendStoriesList.length.toString());
   }
 
   Future<void> fetchMyStories() async {
@@ -37,6 +40,7 @@ class StoryViewController extends GetxController{
 
     final List<StoryModel> stories = userStories.docs.map((story) => StoryModel.fromJson(story)).toList();
 
+    storyItems.clear();
     for (var story in stories){
       if (story.type == "Image") {
         storyItems.add(
@@ -51,9 +55,7 @@ class StoryViewController extends GetxController{
         storyItems.add(
             StoryItem.text(
                 title: story.captions!,
-                backgroundColor: Color(int.parse(story.color!.substring(
-                    story.color!.indexOf('0x'),
-                    story.color!.indexOf(')'))))
+                backgroundColor: getColor(story.color!)
             )
         );
       }
@@ -88,14 +90,35 @@ class StoryViewController extends GetxController{
           else {
             storyList.add(StoryItem.text(
                 title: story.captions!,
-                backgroundColor: Color(int.parse(story.color!.substring(
-                  story.color!.indexOf('0x'),
-                  story.color!.indexOf(')')))))
+                backgroundColor: getColor(story.color!))
             );
           }
         }
-      friendStoriesList.add(storyList);
+
+          friendStoriesList.add(storyList);
+
       }
+    }
+  }
+
+  Color getColor(int code){
+    switch(code){
+      case 0:
+        return TColors.primary;
+      case 1:
+        return Colors.deepOrange;
+      case 2:
+        return Colors.blue;
+      case 3:
+        return Colors.red.shade800;
+      case 4:
+        return Colors.yellow.shade700;
+      case 5:
+        return Colors.purple;
+      case 6:
+        return Colors.black54;
+      default:
+        return TColors.primary;
     }
   }
 

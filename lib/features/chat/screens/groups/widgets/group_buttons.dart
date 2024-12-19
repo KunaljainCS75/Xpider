@@ -30,18 +30,18 @@ class GroupButtons extends StatelessWidget {
         radius: 100,
           backgroundColor: backgroundColor,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: TSizes.defaultSpace / 2, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: TSizes.defaultSpace / 4, horizontal: 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 RoundedContainer(
                     radius: 100,
                     backgroundColor: iconBackgroundColor, child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Icon(icon, color: iconColor),
+                  padding: const EdgeInsets.all(2.0),
+                  child: Icon(icon, color: iconColor, size: 15),
                 )),
-                const SizedBox(width: TSizes.spaceBtwItems),
-                Text(label ?? '', style: Theme.of(context).textTheme.titleMedium,)
+                const SizedBox(width: TSizes.spaceBtwItems / 2),
+                Text(label ?? '', style: Theme.of(context).textTheme.labelLarge,)
               ],
             ),
           )

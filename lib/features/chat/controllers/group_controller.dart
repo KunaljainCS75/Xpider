@@ -21,6 +21,8 @@ class GroupController extends GetxController{
   final groupRepository = Get.put(GroupRepository());
   final db = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
+  final userController = UserController.instance;
+  GroupUserModel myProfile = GroupUserModel.empty();
 
   RxList<GroupUserModel> groupMembers = <GroupUserModel>[].obs;
 
@@ -29,7 +31,8 @@ class GroupController extends GetxController{
   RxBool isLoading = false.obs;
   RxList<String> memberIds = <String>[].obs;
   final RxString selectedSortOption = 'All Groups'.obs;
-  RxString selectedImagePath = ''.obs;
+  Rx<String> selectedImagePath = ''.obs;
+  XFile? selectedImage;
 
   var uuid = const Uuid();
 
@@ -42,9 +45,23 @@ class GroupController extends GetxController{
   void onInit() {
     super.onInit();
     getAllGroupRooms();
-    print(myGroups.length);
+
   }
 
+  Future <void> fetchMyGroupProfile(String id, GroupRoomModel group) async {
+    DocumentReference groupDoc = db.collection("Users").doc(id)
+        .collection('Groups').doc(group.id);
+
+    // Get the group document
+    DocumentSnapshot snapshot = await groupDoc.get();
+    List<dynamic> participants = snapshot.get('Participants');
+
+    // Update myProfile
+    final myGroupProfile = participants.firstWhere(
+            (member) => member['Id'] == id);
+
+    myProfile = GroupUserModel.fromJson(myGroupProfile);
+  }
   Future<void> addGroup({
     required String groupName, String? description, required String groupProfilePicture, required List<GroupUserModel> participants})
   async {
@@ -58,6 +75,7 @@ class GroupController extends GetxController{
         participants: participants,
         groupProfilePicture: groupProfilePicture,
         createdAt: DateTime.now().toString(),
+        lastMessageTime: DateTime.now().toString(),
         createdBy: UserController.instance.myGroupProfile(),
         status: "Active"
     );
@@ -83,13 +101,19 @@ class GroupController extends GetxController{
   /// Fetch Groups
   void getAllGroupRooms() async {
     final snapshot = await db.collection("Users").doc(auth.currentUser!.uid)
-        .collection("Groups").get();
+        .collection("Groups").orderBy("LastMessageTime", descending: true).get();
 
     // List<String> myGroupIds = snapshot.docs.map((group) => group['Id'] as String).toList();
     // QuerySnapshot myGroupsDetails = await db.collection("AllGroups").where(FieldPath.documentId, whereIn: myGroupIds).get();
 
     final groups = snapshot.docs.map((group) => GroupRoomModel.fromSnapshot(group)).toList();
-    myGroups.assignAll(groups);
+
+    myGroups.clear();
+    for (var group in groups) {
+      if (group.isArchived == false) {
+        myGroups.add(group);
+      }
+    }
     myGroupsCopy.assignAll(groups);
   }
 
@@ -104,22 +128,28 @@ class GroupController extends GetxController{
   }
   /// ---------------------------------------------------------------------------------///
   /// Send Messages (Group)
-  Future<void> sendMessage (GroupRoomModel group, GroupUserModel createdBy, GroupUserModel sender, String message, String? imgUrl) async {
+  Future<void> sendMessage (GroupRoomModel group, GroupUserModel createdBy, GroupUserModel sender, String message, XFile? imgUrl) async {
     isLoading.value = true;
     try {
-
+      String imageUrl = '';
+      if (imgUrl != null){
+        // upload image
+        imageUrl = await groupRepository.uploadImage('Groups/Images/${group.groupName}/', imgUrl);
+      }
+      selectedImage = null;
       /// Store Message on database:
       var newGroupMessage = GroupMessageModel(
         id: uuid.v6(), // Message Id
         groupName: group.groupName,
         lastMessageTime: DateTime.now().toString(),
         profileImage: sender.profilePicture,
-        imageUrl: imgUrl,
+        imageUrl: imageUrl,
         senderId: sender.id,
         senderName: sender.fullName,
         senderMessage: message,
         senderPhoneNo: sender.phoneNumber,
         senderUserName: sender.username,
+        isRead: false
       );
 
       /// Update Message record in all member's database
@@ -134,6 +164,7 @@ class GroupController extends GetxController{
         "LastMessage" : message,
         "LastMessageTime" : DateTime.now().toString(),
         "LastMessageBy" : sender.fullName,
+        "GroupProfilePicture" : group.groupProfilePicture
       };
 
       /// Update Group Room Details
@@ -141,6 +172,8 @@ class GroupController extends GetxController{
         await db.collection("Users").doc(user.id)
             .collection("Groups").doc(group.id).update(updatedGroupRoomDetails);
       }
+
+
 
     } catch (e) {
       rethrow;
@@ -151,7 +184,7 @@ class GroupController extends GetxController{
   }
 
   Future <void> removeUser(GroupRoomModel group, List<GroupUserModel> participants, String userId) async {
-
+    isLoading.value = true;
     try {
       for (var user in participants) {
         DocumentReference docRef = db.collection("Users").doc(user.id)
@@ -162,10 +195,9 @@ class GroupController extends GetxController{
           members.removeWhere((member) => member['Id'] == userId);
           docRef.update({'Participants': members});
         });
-
       }
-      await db.collection("Users").doc(userId).collection("Groups").doc(
-          group.id).delete();
+      getAllGroupRooms();
+      isLoading.value = false;
       } catch (e) {
         print(e);
       }
@@ -200,7 +232,7 @@ class GroupController extends GetxController{
     /// Update Group Room Details
     for (var user in participants) {
       await db.collection("Users").doc(user.id)
-          .collection("Groups").doc(group.id).set(newGroup.toJson());
+          .collection("Groups").doc(group.id).update(newGroup.toJson());
     }
 
   }
@@ -218,34 +250,38 @@ class GroupController extends GetxController{
   /// Filter Functions
   void showAllGroups(){
     myGroups.clear();
-    myGroups.assignAll(myGroupsCopy);
+    for (var group in myGroupsCopy){
+      if (group.isArchived == false){
+        myGroups.add(group);
+      }
+    }
   }
 
   Future<void> showPinnedGroups() async{
-    List <GroupRoomModel> pinnedRooms = <GroupRoomModel>[];
-    for (var group in UserController.instance.pinnedGroups){
-      pinnedRooms.add(await getGroupById(group));
-    }
     myGroups.clear();
-    myGroups.assignAll(pinnedRooms);
+    for (var group in myGroupsCopy){
+      if (group.isPinned){
+        myGroups.add(group);
+      }
+    }
   }
 
   Future<void> showFavouriteGroups() async{
-    List <GroupRoomModel> favouriteRooms = <GroupRoomModel>[];
-    for (var group in UserController.instance.favouriteGroups){
-      favouriteRooms.add(await getGroupById(group));
-    }
     myGroups.clear();
-    myGroups.assignAll(favouriteRooms);
+    for (var group in myGroupsCopy){
+      if (group.isFavourite){
+        myGroups.add(group);
+      }
+    }
   }
 
   Future<void> showArchivedGroups() async{
-    List <GroupRoomModel> archivedRooms = <GroupRoomModel>[];
-    for (var group in UserController.instance.archivedGroups){
-      archivedRooms.add(await getGroupById(group));
-    }
     myGroups.clear();
-    myGroups.assignAll(archivedRooms);
+    for (var group in myGroupsCopy){
+      if (group.isArchived){
+        myGroups.add(group);
+      }
+    }
   }
 
   void sortChats (String sortOption) {
@@ -310,15 +346,23 @@ class GroupController extends GetxController{
         // Upload Image
         final imageUrl = await groupRepository.uploadImage('Groups/Images/Profile/', image);
 
-        // Iterate over each document and update the profile picture
-        for (var user in group.participants) {
-          final groupRoom = await db.collection("Users").doc(user.id)
-              .collection("Groups").doc(group.id).get();
-          await groupRoom.reference.update({"GroupProfilePicture" : imageUrl});
-        }
+       // update the profile picture
+        final groupRoom = await db.collection("Users").doc(auth.currentUser!.uid)
+            .collection("Groups").doc(group.id).get();
+        await groupRoom.reference.update({"GroupProfilePicture" : imageUrl});
 
         // Completion Message
         group.groupProfilePicture = imageUrl;
+
+        // Notify on Group
+        sendMessage(
+            group,
+            group.createdBy,
+            myProfile,
+            userController.encryptor.encrypt(
+                "${myProfile.fullName} has updated this Group profile picture", iv: userController.iv).base64
+            ,null);
+
         Loaders.successSnackBar(title: "Profile Picture Changed", message: "Group profile image has been updated...");
 
       }

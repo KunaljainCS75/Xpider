@@ -23,7 +23,7 @@ class _AppState extends State<App> {
         darkTheme: TAppTheme.darkTheme,
         initialBinding: GeneralBindings(),
         getPages: AppRoutes.pages,
-        home: const OnBoardingScreen()
+        home: const Scaffold(backgroundColor: Colors.black87, body: Center(child: CircularProgressIndicator(color: Colors.white)))
     );
   }
 }

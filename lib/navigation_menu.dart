@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:xpider_chat/features/activity/activity.dart';
+import 'package:xpider_chat/features/activity/screens/activity.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/ChatSection.dart';
 import 'package:xpider_chat/features/chat/screens/groups/create_groups.dart';
 import 'package:xpider_chat/features/personalization/screens/settings/settings.dart';

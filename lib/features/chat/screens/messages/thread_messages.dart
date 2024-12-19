@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/data/user/user.dart';
@@ -25,7 +24,7 @@ class ThreadMessageScreen extends StatelessWidget {
   });
 
   final UserModel userModelReceiver;
-  final ThreadModel thread;
+  final ThreadMessage thread;
 
 
   @override
@@ -108,7 +107,7 @@ class ThreadMessageScreen extends StatelessWidget {
       /// Chat Messages
       body: Padding(
         padding: const EdgeInsets.only(bottom: 70),
-        child: StreamBuilder<List<ThreadModel>>(
+        child: StreamBuilder<List<ThreadMessage>>(
             stream: threadController.getThreadMessages(userModelReceiver.id, thread.id!),
             builder: (context, snapshot) {
               if(snapshot.connectionState == ConnectionState.waiting) {

@@ -2,12 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/models/chat_room_model.dart';
 import 'package:xpider_chat/features/chat/models/thread_model.dart';
 
+import '../../utils/popups/loaders.dart';
 import '../user/user.dart';
 
 class ContactsController extends GetxController{
@@ -25,21 +27,24 @@ class ContactsController extends GetxController{
   final db = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
 
-  @override
-  void onInit() {
-    getContactsPermission();
-    fetchContacts();
-    super.onInit();
-  }
 
-  void getContactsPermission() async {
-    if(await Permission.contacts.isGranted){
+  Future<void> getContactPermission() async {
+    isLoading.value = true;
+
+    // Get status
+    final status = await Permission.contacts.status;
+
+    // Check
+    if(status.isGranted){
       // Fetch Contacts
-      fetchContacts();
-    } else {
+      contacts = await ContactsService.getContacts();
+
+      // Set Loading Value to false
+      isLoading.value = false;
+    } else{
       // Request
-      await Permission.contacts.request();
-      fetchContacts();
+      Permission.contacts.request();
+      Loaders.warningSnackBar(title: "Contacts", message: "Go to App Settings, and allow contacts permission");
     }
   }
   void addNewContact() async {
@@ -58,8 +63,11 @@ class ContactsController extends GetxController{
   }
 
   void fetchContacts() async {
-    contacts = await ContactsService.getContacts();
-    isLoading.value = false;
+    if (await Permission.contacts.isGranted) {
+
+    } else {
+
+    }
   }
 
 
@@ -82,3 +90,55 @@ class ContactsController extends GetxController{
     return resultContacts;
   }
 }
+//
+// Future<void> getContactPermission() async {
+//   isLoading.value = true;
+//
+//   // Get status
+//   final status = await Permission.contacts.status;
+//
+//   // Check
+//   if(status.isGranted){
+//     // Fetch Contacts
+//     contacts = await ContactsService.getContacts();
+//
+//     // Set Loading Value to false
+//     isLoading.value = false;
+//   } else if (status.isDenied){
+//     // Request
+//     PermissionStatus newStatus = await Permission.contacts.request();
+//
+//     // Check new status
+//     if (newStatus.isGranted) {
+//       contacts = await ContactsService.getContacts();
+//       isLoading.value = false;
+//     }
+//   } else if (status.isPermanentlyDenied){
+//
+//     // Go to Manual Settings
+//     final opened = await openAppSettings();
+//
+//     if (opened) {
+//       // Show instructions dialog after opening settings
+//       showDialog(
+//           context: Get.overlayContext!, // Pass your BuildContext here
+//           builder: (BuildContext context) {
+//             return AlertDialog(
+//               title: const Text("Permission Required"),
+//               content: const Text(
+//                   "Please go to Permissions and allow Contacts access for this app."
+//               ),
+//               actions: <Widget>[
+//                 TextButton(
+//                   child: const Text("OK"),
+//                   onPressed: () {
+//                     Navigator.of(context).pop(); // Close dialog
+//                   },
+//                 ),
+//               ],
+//             );}
+//       );
+//     }
+//
+//   }
+// }

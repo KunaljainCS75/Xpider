@@ -82,7 +82,8 @@ class UserController extends GetxController {
         username: user.value.username,
         phoneNumber: user.value.phoneNumber,
         email: user.value.email,
-        profilePicture: user.value.profilePicture
+        profilePicture: user.value.profilePicture,
+        position: "Admin"
     );
   }
 

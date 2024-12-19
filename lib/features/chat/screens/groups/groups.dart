@@ -5,6 +5,7 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/chat/controllers/group_controller.dart';
+import 'package:xpider_chat/features/chat/screens/groups/create_groups.dart';
 import 'package:xpider_chat/features/chat/screens/groups/widgets/single_group.dart';
 import 'package:xpider_chat/features/chat/screens/messages/group_message_screen.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
@@ -28,6 +29,12 @@ class GroupsScreen extends StatelessWidget {
       appBar: TAppBar(
         showBackArrow: false,
         title: Text("Groups", style: Theme.of(context).textTheme.headlineMedium),
+        actions: [
+          InkWell(
+            onTap: () => Get.to(() => const CreateGroupsScreen()),
+            child: const Icon(Icons.group_add),
+          )
+        ],
       ),
 
       body: SingleChildScrollView(
@@ -43,23 +50,50 @@ class GroupsScreen extends StatelessWidget {
             const SizedBox(height: TSizes.spaceBtwSections),
 
             Obx(
-              () => ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  // separatorBuilder: (_, __) => const SizedBox(height: TSizes.spaceBtwItems),
-                  itemCount: groupController.myGroups.length,
-                  itemBuilder: (_, index) {
-                    final group = groupController.myGroups[index];
-                    return InkWell(
-                      highlightColor: Colors.green.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(100),
-                      onTap: () => Get.to(() => GroupMessageScreen(group: group)),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
-                        child: SingleGroup(group: group),
-                      ));
-                  },
-                ),
+              () => Column(
+                children: [
+
+                  /// Pinned Chats (If any)
+                  userController.pinnedGroups.isNotEmpty ? ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      // separatorBuilder: (_, __) => const SizedBox(height: TSizes.spaceBtwItems),
+                      itemCount: groupController.myGroups.length,
+                      itemBuilder: (_, index) {
+                        final group = groupController.myGroups[index];
+                        return  group.isPinned ? InkWell(
+                          highlightColor: Colors.green.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(100),
+                          onTap: () => Get.to(() => GroupMessageScreen(group: group)),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
+                            child: SingleGroup(group: group),
+                          )
+                        ) : const SizedBox();
+                      },
+                    ) : const SizedBox(),
+
+                  /// Other Chats
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    // separatorBuilder: (_, __) => const SizedBox(height: TSizes.spaceBtwItems),
+                    itemCount: groupController.myGroups.length,
+                    itemBuilder: (_, index) {
+                      final group = groupController.myGroups[index];
+                      return  !group.isPinned ? InkWell(
+                          highlightColor: Colors.green.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(100),
+                          onTap: () => Get.to(() => GroupMessageScreen(group: group)),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: TSizes.spaceBtwItems, vertical: 5),
+                            child: SingleGroup(group: group),
+                          )
+                      ) : const SizedBox();
+                    },
+                  )
+                ],
+              ),
             ),
 
             /// End Section

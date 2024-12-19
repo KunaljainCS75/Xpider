@@ -1,8 +1,6 @@
-import 'dart:io';
-
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
 import 'package:xpider_chat/features/chat/screens/groups/group_profile.dart';
@@ -18,12 +16,9 @@ import '../../../../utils/constants/image_strings.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/helpers/helper_functions.dart';
 import '../../../../utils/popups/loaders.dart';
-import '../../controllers/call_controller.dart';
 import '../../controllers/group_controller.dart';
 import '../../controllers/user_controller.dart';
 import '../../models/group_message_model.dart';
-import '../chat_section/widgets/type_messages_bar.dart';
-import 'message_screen.dart';
 
 class GroupMessageScreen extends StatelessWidget {
   const GroupMessageScreen({
@@ -42,7 +37,7 @@ class GroupMessageScreen extends StatelessWidget {
     final db = groupController.db;
     final auth = groupController.auth;
 
-
+    groupController.fetchMyGroupProfile(auth.currentUser!.uid, group);
 
     RxList<String> archivedGroups = UserController.instance.archivedGroups;
     RxList<String> pinnedGroups = UserController.instance.pinnedGroups;
@@ -188,7 +183,7 @@ class GroupMessageScreen extends StatelessWidget {
                       group.isArchived = false;
 
                       // Update Firebase
-                      await db.collection("Users").doc(auth.currentUser!.uid).collection("Groups").doc(group.id).update({"IsPinned" : false});
+                      await db.collection("Users").doc(auth.currentUser!.uid).collection("Groups").doc(group.id).update({"IsArchived" : false});
 
                       // Notify User
                       Loaders.customToast(message: "'${group.groupName}' is removed from Archives");
@@ -202,12 +197,12 @@ class GroupMessageScreen extends StatelessWidget {
                       ? const Icon(Icons.arrow_circle_up_rounded, color: Colors.blue) : const Icon(Icons.arrow_circle_down_rounded)),
                   ),
                   const SizedBox(width: TSizes.spaceBtwItems / 2),
-                  InkWell(
-                    radius: 50,
-                    // onTap: () => Get.to(() => CalenderScreen(group: group)),
-                    child: const Icon(Icons.date_range),
-                  ),
-                  const SizedBox(width: TSizes.spaceBtwItems),
+                  // InkWell(
+                  //   radius: 50,
+                  //   // onTap: () => Get.to(() => CalenderScreen(group: group)),
+                  //   child: const Icon(Icons.date_range),
+                  // ),
+                  // const SizedBox(width: TSizes.spaceBtwItems),
                   InkWell(
                     radius: 50,
                     onTap: () {
@@ -297,7 +292,7 @@ class GroupMessageScreen extends StatelessWidget {
                           final message = snapshot.data![index];
                           final encryptedMessageString = snapshot.data![index].senderMessage;
                           final encryptedMessage = userController.stringToEncrypted(encryptedMessageString);
-
+                          String formattedTime = DateFormat('hh:mm a').format(DateTime.parse(message.lastMessageTime));
                           bool showDate = false;
                           bool isFirstTime = false;
                           if (index == snapshot.data!.length - 1){
@@ -326,9 +321,9 @@ class GroupMessageScreen extends StatelessWidget {
                                 message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                                 imageUrl: message.imageUrl!,
                                 // isThread: message.thread != ThreadModel.empty(),
-                                time: message.lastMessageTime,
+                                time: formattedTime,
                                 status: Status.read.toString(),
-                                isRead: true,
+                                isRead: message.isRead,
                                 senderName: message.senderName!,
                                 isComing: !(groupController.auth.currentUser!.uid == message.senderId),
                               ),

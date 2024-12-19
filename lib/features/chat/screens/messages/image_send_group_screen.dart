@@ -122,6 +122,7 @@ class WriteCaptionsBox extends StatelessWidget {
             IconButton(onPressed: () async {
               final image = await ImagePicker().pickImage(source: ImageSource.gallery);
               groupController.selectedImagePath.value = image!.path;
+              groupController.selectedImage = image;
             },
                 icon: const Icon(Icons.image_search)),
             IconButton(onPressed: (){
@@ -130,7 +131,7 @@ class WriteCaptionsBox extends StatelessWidget {
               }
               groupController.sendMessage(
                 group, group.createdBy, user,
-                UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64, groupController.selectedImagePath.value);
+                UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64, groupController.selectedImage);
 
               messageController.clear();
               Get.back();

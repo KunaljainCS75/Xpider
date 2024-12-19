@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/date_symbols.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/thread_controller.dart';
@@ -26,7 +25,7 @@ class ImageSendScreen extends StatelessWidget {
   final TextEditingController messageController;
   final UserModel userModelReceiver;
   final bool isThread;
-  final ThreadModel thread;
+  final ThreadMessage thread;
 
 
   @override
@@ -61,8 +60,8 @@ class ImageSendScreen extends StatelessWidget {
                      backgroundColor: TColors.black,
                      child: SizedBox(height: 300, width: THelperFunctions.screenWidth(),
                          child: isThread
-                             ? Image.file(File(chatController.selectedImagePath.value), fit: BoxFit.fitHeight)
-                             : Image.file(File(threadController.selectedImagePath.value), fit: BoxFit.fitHeight)))),
+                             ? Image.file(File(threadController.selectedImagePath.value), fit: BoxFit.fitWidth,)
+                             : Image.file(File(chatController.selectedImagePath.value), fit: BoxFit.fitWidth)))),
               const SizedBox(height: TSizes.defaultSpace),
 
             ],
@@ -82,7 +81,7 @@ class WriteCaptionsBox extends StatelessWidget {
 
   final TextEditingController messageController;
   final UserModel userModelReceiver;
-  final ThreadModel thread;
+  final ThreadMessage thread;
   final bool isThread;
 
   @override
@@ -153,13 +152,13 @@ class WriteCaptionsBox extends StatelessWidget {
                       if (isThread) {
                         threadController.sendThreadMessage(thread, userModelReceiver,
                             UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64,
-                            threadController.selectedImagePath.value);
+                            threadController.selectedImage);
                       } else {
                         chatController.sendMessage(
                             receiver: userModelReceiver,
                             sender: UserController.instance.user.value,
                             message: UserController.instance.encryptor.encrypt(messageController.text, iv: UserController.instance.iv).base64,
-                            imgUrl: chatController.selectedImagePath.value);
+                            image: chatController.selectedImage);
                       }
                         messageController.clear();
                       threadController.selectedImagePath.value = '';

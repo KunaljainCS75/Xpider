@@ -99,7 +99,7 @@ class XpiderMembersScreen extends StatelessWidget {
                           username: user.username,
                           phoneNumber: user.phoneNumber,
                           email: user.email,
-                          profilePicture: user.profilePicture
+                          profilePicture: user.profilePicture, position: 'Member'
                       );
 
                       RxBool isSelected = false.obs;

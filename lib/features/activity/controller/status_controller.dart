@@ -1,11 +1,14 @@
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:story_view/controller/story_controller.dart';
 import 'package:uuid/uuid.dart';
+import 'package:xpider_chat/features/activity/controller/story_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import '../../../data/repositories/user/user_repository.dart';
+import '../../../utils/constants/colors.dart';
 import '../../../utils/constants/image_strings.dart';
 import '../../../utils/popups/loaders.dart';
 import '../models/status_model.dart';
@@ -21,6 +24,7 @@ class StatusController extends GetxController{
   Rx<StatusUserModel> status = StatusUserModel.empty().obs;
   RxList<String> friendsStatusId = <String>[].obs;
   RxList<StatusUserModel> friendsStatusList = <StatusUserModel>[].obs;
+  RxBool isStatusLoading = false.obs;
 
   @override
   void onInit() {
@@ -42,8 +46,9 @@ class StatusController extends GetxController{
   }
 
   /// Update User Status picture
-  Future<String?> uploadUserStory({XFile? image, String? captions, Color? color}) async {
+  Future<String?> uploadUserStory({XFile? image, String? captions, int? color}) async {
     try{
+      isStatusLoading.value = true;
       final String imageUrl;
       // Upload Image
       if (image != null) {
@@ -64,7 +69,7 @@ class StatusController extends GetxController{
       StoryModel story = StoryModel(
           captions: captions,
           imageUrl: imageUrl,
-          color: color?.toString(),
+          color: color,
           type: color == null ? "Image" : "Text",
           createdAt: DateTime.now().toString());
 
@@ -75,13 +80,25 @@ class StatusController extends GetxController{
       await db.collection("Status").doc(user.value.id).collection("Stories").doc(statusId).set(story.toJson());
       getStatusUpdates(user.value.id);
       Loaders.successSnackBar(title: "Status Uploaded", message: "Your Status image has been uploaded...");
-      return imageUrl;
 
+      // Set Deletion Timer:
+      Future.delayed(const Duration(hours: 24), () {
+        deleteStatus(statusId);
+      });
+      return imageUrl;
     }
     catch (e) {
       Loaders.warningSnackBar(title: 'Oh Snap', message: "Something went wrong: $e");
     }
+    finally{
+      isStatusLoading.value = false;
+      StoryViewController.instance.fetchMyStories();
+    }
     return null;
+  }
+
+  Future<void> deleteStatus(String statusId) async {
+    await db.collection('Status').doc(user.value.id).collection("Stories").doc(statusId).delete();
   }
 
   Future<void> getReceiverIdFromChatId() async {
@@ -109,4 +126,6 @@ class StatusController extends GetxController{
     }
     print(friendsStatusList.length);
   }
+
+
 }

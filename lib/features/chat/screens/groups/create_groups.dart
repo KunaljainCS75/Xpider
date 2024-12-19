@@ -57,16 +57,19 @@ class CreateGroupsScreen extends StatelessWidget {
           () => Stack(
               children: [
                 Positioned(
-                  left: THelperFunctions.screenWidth() * 0.09,
+                  left: TSizes.defaultSpace * 2.5,
+                  right: TSizes.defaultSpace * 2.5,
                   top: THelperFunctions.screenHeight() * 0.125,
                   child: Image(
                     image: const AssetImage("assets/images/network/spider.png"),
                     color: Colors.blue.withOpacity(0.3),
-                    height: 350,
+                    fit: BoxFit.cover,
+                    height: 300,
                   ),
                 ),
                 Positioned(
-                    left: THelperFunctions.screenWidth() * 0.38,
+                    left: 0,
+                    right: 0,
                     top: THelperFunctions.screenHeight() * 0.25,
                     child:  MemberLabel(
                         user: UserController.instance.myGroupProfile(),
@@ -151,7 +154,7 @@ class CreateGroupsScreen extends StatelessWidget {
                                       phoneNumber: myProfile.phoneNumber,
                                       email: myProfile.email,
                                       profilePicture: myProfile.profilePicture,
-                                      admin: true
+                                      position: "Admin"
                                   ));
                             }
                             Get.to(() => const GroupFillDetailsScreen());

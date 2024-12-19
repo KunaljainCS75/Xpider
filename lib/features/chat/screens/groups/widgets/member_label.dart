@@ -43,10 +43,10 @@ class MemberLabel extends StatelessWidget {
                         if (groupMembers.indexOf(user) <= 3) {
                           isAdmin.value = !isAdmin.value;
                           if (isAdmin.value) {
-                            user.admin = true;
+                            user.position = "Admin";
                             GroupController.instance.adminSize++;
                           } else {
-                            user.admin = false;
+                            user.position = "Member";
                             GroupController.instance.adminSize--;
                           }
                         }
@@ -59,6 +59,8 @@ class MemberLabel extends StatelessWidget {
                       alignment: Alignment.topRight,
                       children: [
                         RoundedContainer(
+                          height: 60,
+                          width: 60,
                           radius: 50,
                           backgroundColor: groupMembers.indexOf(user) <= 5 && (isAdmin.value || defaultAdmin) ? Colors.redAccent : Colors.white24,
                           child: Padding(
@@ -68,7 +70,7 @@ class MemberLabel extends StatelessWidget {
                         ),
                         groupMembers.indexOf(user) <= 3 && (isAdmin.value || defaultAdmin)
                             ? const CircularImage(image: "assets/images/user/admin.png",
-                                                  height: 25, width: 25,
+                                                  height: 15, width: 15,
                                                   backgroundColor: Colors.white, overLayColor: Colors.redAccent)
                             : const SizedBox()
                       ],
@@ -85,9 +87,9 @@ class MemberLabel extends StatelessWidget {
                   groupMembers.removeWhere((person) => person.id == user.id);
                 },
                 child: RoundedContainer(
-                  height: 25,
-                  width: 25,
-                  backgroundColor: Colors.white, child: Icon(Icons.remove_circle, color: Colors.black.withOpacity(0.8))),
+                  height: 15,
+                  width: 15,
+                  backgroundColor: Colors.white, child: Icon(Icons.remove_circle, color: Colors.black.withOpacity(0.8), size: 15,)),
               ) : const SizedBox(),
             ],
           ),
@@ -95,11 +97,12 @@ class MemberLabel extends StatelessWidget {
 
         /// Name Label
         RoundedContainer(
-            backgroundColor: Colors.black.withOpacity(0.8),
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(user.fullName),
-            ))
+
+          backgroundColor: Colors.black.withOpacity(0.8),
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Text(user.fullName, style: TextStyle(fontSize: 10),),
+          ))
       ],
     );
   }

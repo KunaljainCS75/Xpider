@@ -22,6 +22,7 @@ class ChatController extends GetxController{
 
   final auth = FirebaseAuth.instance;
   final db = FirebaseFirestore.instance;
+  final userRepository = UserRepository.instance;
   RxBool isLoading = true.obs;
   RxBool imageUploading = true.obs;
   var uuid = const Uuid();
@@ -31,6 +32,7 @@ class ChatController extends GetxController{
   RxList<ChatRoomModel> chatRoomListCopy = <ChatRoomModel>[].obs;
   RxList<ChatRoomModel> pinnedChatRoomList = <ChatRoomModel>[].obs;
   RxString selectedImagePath = ''.obs;
+  XFile? selectedImage;
   final RxString selectedSortOption = 'All Chats'.obs;
 
   @override
@@ -55,26 +57,29 @@ class ChatController extends GetxController{
 
 
 
-  Future<void> sendMessage ({
-    required UserModel receiver,
-    required UserModel sender,
-    required String message,
-    String? imgUrl
-  }) async {
+  Future<void> sendMessage ({required UserModel receiver, required UserModel sender, required String message, XFile? image}) async {
     isLoading.value = true;
     String roomId = getRoomId(receiver.id);
+
+    String imageUrl = '';
+    if (image!= null){
+      // upload image
+      imageUrl = await userRepository.uploadImage('Chats/Images/', image);
+    }
+    selectedImage = null;
 
       var newChatMessage = ChatMessageModel(
         id: uuid.v6(),
         chatName: receiver.fullName,
         lastMessageTime: DateTime.now().toString(),
         profileImage: receiver.profilePicture,
-        imageUrl: imgUrl,
+        imageUrl: imageUrl,
         senderId: sender.id,
         receiverId: receiver.id,
         senderName: sender.fullName,
         receiverName: receiver.fullName,
         senderMessage: message,
+        isRead: false
       );
 
       // Fetch Room Details from both side...
@@ -87,7 +92,7 @@ class ChatController extends GetxController{
         lastMessageTime: DateTime.now().toString(),
         sender: sender,
         receiver: receiver,
-        imgUrl: imgUrl,
+        imgUrl: imageUrl,
         isPinned: roomSender.isPinned,
         isArchived: roomSender.isArchived,
         isFavourite: roomSender.isFavourite,
@@ -102,7 +107,7 @@ class ChatController extends GetxController{
           lastMessageTime: DateTime.now().toString(),
           sender: sender,
           receiver: receiver,
-          imgUrl: imgUrl,
+          imgUrl: imageUrl,
           isPinned: roomReceiver.isPinned,
           isArchived: roomReceiver.isArchived,
           isFavourite: roomReceiver.isFavourite,
@@ -176,9 +181,9 @@ class ChatController extends GetxController{
 
 
   void getAllChatRooms() async {
-    List<ChatRoomModel> roomList = <ChatRoomModel>[];
-    final rooms = await db.collection("Users").doc(auth.currentUser!.uid).collection("Chats").get();
-    roomList = rooms.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
+    final rooms = await db.collection("Users").doc(auth.currentUser!.uid)
+        .collection("Chats").orderBy("LastMessageTime", descending: true).get();
+    final roomList = rooms.docs.map((room) => ChatRoomModel.fromJson(room)).toList();
 
     chatRoomList.clear();
     for (var chat in roomList){
@@ -187,7 +192,6 @@ class ChatController extends GetxController{
       }
     }
     chatRoomListCopy.assignAll(roomList);
-    print(roomList.length);
   }
 
   Future <List<ChatRoomModel>> getChatRoomsBySearch (String name) async{
@@ -214,7 +218,7 @@ class ChatController extends GetxController{
   Future<void> showPinnedChats() async{
     List <ChatRoomModel> pinnedRooms = <ChatRoomModel>[];
     for (var chat in chatRoomListCopy) {
-      if (chat.isPinned && !chat.isArchived) {
+      if (chat.isPinned) {
         pinnedRooms.add(chat);
       }
     }
@@ -227,7 +231,7 @@ class ChatController extends GetxController{
   Future<void> showFavouriteChats() async{
     List <ChatRoomModel> favouriteRooms = <ChatRoomModel>[];
     for (var chat in chatRoomListCopy){
-      if (chat.isFavourite && !chat.isArchived) {
+      if (chat.isFavourite) {
         favouriteRooms.add(chat);
       }
     }

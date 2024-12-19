@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
+import 'package:xpider_chat/common/texts/date_time_tag.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
@@ -88,7 +90,7 @@ class CalenderScreen extends StatelessWidget {
                                 message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                                 imageUrl: message.imageUrl!,
                                 // isThread: message.thread != ThreadModel.empty(),
-                                time: message.lastMessageTime,
+                                time: DateFormat("hh:mm a").format(DateTime.parse(message.lastMessageTime)),
                                 status: Status.read.toString(),
                                 senderName: message.senderName!,
                                 isRead: true,
@@ -107,8 +109,8 @@ class CalenderScreen extends StatelessWidget {
                                         padding: const EdgeInsets.all(8.0),
                                         child: Column(
                                           children: [
-                                              Text("No messages found for Date:",style: Theme.of(context).textTheme.titleMedium),
-                                              Text(chatController.selectedDay.value.toString().substring(0, 10)),
+                                              Text("See above for Messages found on Date:",style: Theme.of(context).textTheme.titleMedium),
+                                            Text(DateFormat("d MMMM, yyyy").format(chatController.selectedDay.value)),
                                           ],
                                         ),
                                       ),
@@ -116,10 +118,10 @@ class CalenderScreen extends StatelessWidget {
                                     SizedBox(height: THelperFunctions.screenHeight() * .25)
                                   ],
                                 );
-                                                      }else {
-                          return const SizedBox();
-                                                      }
-                                                  });
+                            }else {
+                              return const SizedBox();
+                            }
+                          });
 
                         },
                     );

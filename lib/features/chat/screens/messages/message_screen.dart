@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/appbar/appbar.dart';
-import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.dart';
 import 'package:xpider_chat/common/emoji/emoji_keyboard.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/common/texts/date_format.dart';
-import 'package:xpider_chat/data/contacts/contacts_controller.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
-import 'package:xpider_chat/features/chat/models/chat_room_model.dart';
 import 'package:xpider_chat/features/chat/screens/calender/cal.dart';
 import 'package:xpider_chat/features/chat/screens/chat_section/widgets/type_messages_bar.dart';
 import 'package:xpider_chat/features/chat/screens/messages/widgets/calling_button.dart';
@@ -69,7 +66,9 @@ class MessageScreen extends StatelessWidget {
               height: 500,child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
-              TypeMessagesBar(dark: dark,messageController: messageController, chatController: chatController, userModelReceiver: userModelReceiver, isThread:false, thread: ThreadModel.empty(),),
+              TypeMessagesBar(
+                dark: dark,messageController: messageController, chatController: chatController,
+                userModelReceiver: userModelReceiver, isThread:false, thread: ThreadMessage.empty()),
               /// Emojis
 
                userController.showEmoji.value ? SizedBox(
@@ -224,13 +223,25 @@ class MessageScreen extends StatelessWidget {
                       reverse: true,
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
+                        
+                        /// Update read status at receiver's end for receiver's messages
                         final message = snapshot.data![index];
+                        if (message.receiverId != userController.user.value.id) {
+                          userController.db.collection("Users").doc(
+                              message.receiverId).collection("Chats").doc(roomId).collection("Messages").doc(message.id).update({"IsRead": true});
+                        } else {
+                          userController.db.collection("Users").doc(
+                            message.senderId).collection("Chats").doc(roomId).collection("Messages").doc(message.id).update({"IsRead": true});
+                        }
+                        /// Decrypt the Message
                         final encryptedMessageString = snapshot.data![index].senderMessage;
                         final encryptedMessage = userController.stringToEncrypted(encryptedMessageString);
-                        // String formattedTime = DateFormat('hh:mm a').format(timestamp);
+                        String formattedTime = DateFormat('hh:mm a').format(DateTime.parse(message.lastMessageTime));
+
+                        ///
                         bool showDate = false;
                         bool isFirstTime = false;
-                        if (index == snapshot.data!.length - 1){
+                        if (index == snapshot.data!.length - 1) {
                           isFirstTime = true;
                         }
                         if (index < snapshot.data!.length - 1) {
@@ -251,13 +262,14 @@ class MessageScreen extends StatelessWidget {
                               DateTag(text: snapshot.data![snapshot.data!.length - 1].lastMessageTime.substring(0,10)),
                             if (showDate)
                               DateTag(text: snapshot.data![index].lastMessageTime.substring(0,10)),
+
                             ChatBubble(
                               message: userController.encryptor.decrypt(encryptedMessage, iv: userController.iv),
                               imageUrl: message.imageUrl!,
                               // isThread: message.thread != ThreadModel.empty(),
-                              time: message.lastMessageTime,
+                              time: formattedTime,
                               status: Status.read.toString(),
-                              isRead: true,
+                              isRead: message.isRead,
                               senderName: message.senderName!,
                               isComing: !(chatController.auth.currentUser!.uid == message.senderId),
 

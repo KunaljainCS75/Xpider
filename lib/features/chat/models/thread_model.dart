@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ThreadModel{
+class ThreadMessage{
   final String? id;
   final String threadName;
   final String? senderMessage;
-  // // final ThreadModel? thread;
+  // // final ThreadMessage? thread;
   // final String? receiverMessage;
   final String? senderName;
   final String? receiverName;
@@ -20,7 +20,7 @@ class ThreadModel{
   final int threadCount;
   final List<dynamic>? threadMessages;
 
-  ThreadModel({
+  ThreadMessage({
     required this.id,
     required this.threadName,
     required this.lastMessageTime,
@@ -42,7 +42,7 @@ class ThreadModel{
   });
 
   /// Empty Helper Function
-  static ThreadModel empty() => ThreadModel(id: 'example',lastMessageTime: '', senderId: '', receiverId: '', threadName: '');
+  static ThreadMessage empty() => ThreadMessage(id: 'example',lastMessageTime: '', senderId: '', receiverId: '', threadName: '');
 
   /// Convert Model to JSON Structure to (upload) store in Firebase
   toJson(){
@@ -69,13 +69,13 @@ class ThreadModel{
   }
 
   /// Map JSON Oriented document snapshot from FireBase to UserModel
-  factory ThreadModel.fromJson(Map<String, dynamic> document) {
+  factory ThreadMessage.fromJson(Map<String, dynamic> document) {
     final data = document;
-    if (data.isEmpty) return ThreadModel.empty();
-    return ThreadModel(
+    if (data.isEmpty) return ThreadMessage.empty();
+    return ThreadMessage(
       id: data['Id'] ?? 'example',
       threadName: data['ThreadName'] ?? '',
-      // thread: ThreadModel.fromJson(data["Thread"]),
+      // thread: ThreadMessage.fromJson(data["Thread"]),
       // profileImage: data['ProfileImage'] ?? '',
       threadCount: data["ThreadCount"] ?? 0,
       senderMessage: data['SenderMessage'] ?? '',
@@ -97,13 +97,13 @@ class ThreadModel{
   }
 
   /// Map JSON Oriented document snapshot from FireBase to UserModel
-  factory ThreadModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {
+  factory ThreadMessage.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data()!;
-    if (data.isEmpty) return ThreadModel.empty();
-    return ThreadModel(
+    if (data.isEmpty) return ThreadMessage.empty();
+    return ThreadMessage(
       id: data['Id'] ?? 'example',
       threadName: data['ThreadName'] ?? '',
-      // thread: ThreadModel.fromJson(data["Thread"]),
+      // thread: ThreadMessage.fromJson(data["Thread"]),
       // profileImage: data['ProfileImage'] ?? '',
       senderMessage: data['SenderMessage'] ?? '',
       senderName: data['SenderName'] ?? '',

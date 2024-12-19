@@ -5,7 +5,8 @@ import 'package:xpider_chat/common/custom_shapes/containers/rounded_container.da
 import 'package:xpider_chat/utils/constants/sizes.dart';
 import 'package:xpider_chat/utils/helpers/helper_functions.dart';
 
-import '../../../../utils/constants/colors.dart';
+import '../../../../../utils/constants/colors.dart';
+
 
 class StoryCaptionTypeBar extends StatelessWidget {
   const StoryCaptionTypeBar({super.key, required this.captionController, this.isImageStory = false});

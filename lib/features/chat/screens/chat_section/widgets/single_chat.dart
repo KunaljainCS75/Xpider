@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
@@ -33,9 +34,13 @@ class SingleChat extends StatelessWidget {
     else {
       receiver = chatRoom.receiver;
     }
+
+    final lastMessageTime = DateTime.parse(chatRoom.lastMessageTime!);
+    String formattedTime = DateFormat('hh:mm a').format(lastMessageTime);
+
     return RoundedContainer(
       backgroundColor: Colors.transparent,
-      height: 80,
+      height: 70,
       child: Row(
         children: [
           /// Profile Picture
@@ -43,13 +48,20 @@ class SingleChat extends StatelessWidget {
             children: [
               InkWell(
                   onTap: () => ChatController.instance.showEnlargedImage(receiver.profilePicture),
-                  child: CircularImage(image: receiver.profilePicture, isNetworkImage: receiver.profilePicture != TImages.user)
+                  child: CircularImage(
+                      height: 50, width: 50,
+                      image: receiver.profilePicture, isNetworkImage: receiver.profilePicture != TImages.user)
               ),
 
               /// Pin Star
               Positioned(
                   child: chatRoom.isPinned
-                      ? const Icon(Icons.star, color: Colors.yellow) : const SizedBox(),
+                      ?  RoundedContainer(
+                      backgroundColor: Colors.black87,
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Icon(Icons.star, color: Colors.yellow.shade600, size: 15),
+                      )) : const SizedBox(),
                 ),
 
             ],
@@ -62,7 +74,7 @@ class SingleChat extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(receiver.fullName, style: dark? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.78, fontWeightDelta: 2) : Theme.of(context).textTheme.headlineSmall),
+                Text(receiver.fullName, style: dark? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.65, fontWeightDelta: 2) : Theme.of(context).textTheme.headlineSmall),
                  Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -72,7 +84,7 @@ class SingleChat extends StatelessWidget {
 
                       /// Last Messenger Name
 
-                      Text("${chatRoom.sender.fullName} : ", style: Theme.of(context).textTheme.titleSmall),
+                      Text("${chatRoom.sender.fullName} : ", style: Theme.of(context).textTheme.labelLarge),
 
                       /// Last Message
                       if (chatRoom.imgUrl != "")
@@ -86,7 +98,7 @@ class SingleChat extends StatelessWidget {
                       Flexible(
                         child: SizedBox(
                             child: Text(lastMessage,
-                              style: Theme.of(context).textTheme.titleSmall, overflow: TextOverflow.ellipsis,)),
+                              style: Theme.of(context).textTheme.labelLarge, overflow: TextOverflow.ellipsis,)),
                       )
                     ],
                   ),
@@ -125,25 +137,26 @@ class SingleChat extends StatelessWidget {
 
 
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             /// Last Message Time
             children: [
               const SizedBox(height: TSizes.defaultSpace / 1.4),
               if (chatRoom.lastMessageTime!=null)
-                Text(chatRoom.lastMessageTime!.substring(11,16), style: Theme.of(context).textTheme.labelLarge),
+                Text(formattedTime, style: Theme.of(context).textTheme.labelSmall!.apply(fontSizeFactor: 0.8)),
               const SizedBox(height: TSizes.defaultSpace / 4),
 
               /// Number of Unreads
-              Row(
+              Stack(
+                alignment: Alignment.center,
                 children: [
-
+                  const Image(image: AssetImage(TImages.unreadBorder), height: 25, width: 25, color: Colors.yellowAccent,),
                   RoundedContainer(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Colors.transparent,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                       child: Text(chatRoom.unreadMessages.toString(), style: Theme.of(context).textTheme.labelLarge!.apply(color: TColors.white, fontWeightDelta: 2)),
                     ),
-                  )
+                  ),
                 ],
               )
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 import 'package:xpider_chat/features/chat/models/group_chat_model.dart';
@@ -31,9 +32,12 @@ class SingleGroup extends StatelessWidget {
       lastMessage = userController.encryptor.decrypt(encryptedMessage, iv: userController.iv);
     }
 
+    final lastMessageTime = DateTime.parse(group.lastMessageTime!);
+    String formattedTime = DateFormat('hh:mm a').format(lastMessageTime);
+
     return RoundedContainer(
       backgroundColor: Colors.transparent,
-      height: 80,
+      height: 70,
       child: Row(
         children: [
           /// Profile Picture
@@ -41,14 +45,23 @@ class SingleGroup extends StatelessWidget {
             children: [
               InkWell(
                   onTap: () => groupController.showEnlargedImage(group.groupProfilePicture!),
-                  child: CircularImage(image: group.groupProfilePicture, isNetworkImage: group.groupProfilePicture != TImages.group)
+                  child: CircularImage(
+                    height: 50, width: 50,
+                      image: group.groupProfilePicture,
+                      isNetworkImage: group.groupProfilePicture != TImages.group,
+                    backgroundColor: Colors.black87,
+                  )
               ),
-              Obx(
-                    () => Positioned(
-                  child: UserController.instance.pinnedGroups.contains(group.id)
-                      ? const Icon(Icons.star, color: Colors.yellow) : const SizedBox(),
+
+              Positioned(
+                  child: group.isPinned
+                      ? RoundedContainer(
+                      backgroundColor: Colors.black87,
+                      child: Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Icon(Icons.star, color: Colors.yellow.shade600, size: 15),
+                      )) : const SizedBox(),
                 ),
-              )
             ],
           ),
           const SizedBox(width: TSizes.spaceBtwItems),
@@ -59,7 +72,8 @@ class SingleGroup extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(group.groupName, style: dark? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.78, fontWeightDelta: 2) : Theme.of(context).textTheme.headlineSmall),
+                Text(group.groupName, style: dark ? Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.65, fontWeightDelta: 2)
+                                                  : Theme.of(context).textTheme.headlineSmall!.apply(fontSizeFactor: 0.65, fontWeightDelta: 2)),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -73,7 +87,7 @@ class SingleGroup extends StatelessWidget {
                     /// Last Messenger Name
 
                     if (lastMessage != '')
-                      Text("${group.lastMessageBy} : ", style: Theme.of(context).textTheme.titleSmall),
+                      Text("${group.lastMessageBy} : ", style: Theme.of(context).textTheme.labelLarge),
 
                     /// Last Message
                     // if (group.im != "")
@@ -86,11 +100,17 @@ class SingleGroup extends StatelessWidget {
                     //       )),
                     Flexible(
                       child: SizedBox(
-                          child: Text(
-                            lastMessage != ''
-                                ? lastMessage
-                                : "${group.createdBy.firstName} created this group",
-                            style: Theme.of(context).textTheme.titleSmall, overflow: TextOverflow.ellipsis,)),
+                          child: Row(
+                            children: [
+                              if (lastMessage == "Image_Message")
+                                const Icon(Icons.image),
+                              Text(
+                                lastMessage != ''
+                                    ? (lastMessage != "Image_Message" ? lastMessage : "Image")
+                                    : "${group.createdBy.firstName} created this group",
+                                style: Theme.of(context).textTheme.labelLarge, overflow: TextOverflow.ellipsis),
+                            ],
+                          )),
                     )
                   ],
                 ),
@@ -153,28 +173,30 @@ class SingleGroup extends StatelessWidget {
 
 
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             /// Last Message Time
             children: [
               const SizedBox(height: TSizes.defaultSpace / 1.4),
 
                 Text(
                     group.lastMessageTime != ''
-                    ? group.lastMessageTime!.substring(11,16)
-                    : "N/A", style: Theme.of(context).textTheme.labelLarge),
+                    ? formattedTime
+                    : "N/A", style: Theme.of(context).textTheme.labelLarge!.apply(fontSizeFactor: 0.8)),
               const SizedBox(height: TSizes.defaultSpace / 4),
 
               /// Pin Symbol && Number of Unreads
-              Row(
+              const SizedBox(width: 5),
+              Stack(
+                alignment: Alignment.center,
                 children: [
-                  const SizedBox(width: 5),
+                  const Image(image: AssetImage(TImages.unreadBorder), height: 25, width: 25, color: Colors.yellowAccent,),
                   RoundedContainer(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Colors.transparent,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                       child: Text(group.unreadMessages.toString(), style: Theme.of(context).textTheme.labelLarge!.apply(color: TColors.white, fontWeightDelta: 2)),
                     ),
-                  )
+                  ),
                 ],
               )
             ],

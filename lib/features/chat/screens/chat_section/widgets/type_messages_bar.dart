@@ -32,7 +32,7 @@ class TypeMessagesBar extends StatelessWidget {
   final ChatController? chatController;
   final ThreadController? threadController;
   final UserModel userModelReceiver;
-  final ThreadModel thread;
+  final ThreadMessage thread;
   final bool isThread;
   final userRepository = UserRepository.instance;
 
@@ -131,7 +131,9 @@ class TypeMessagesBar extends StatelessWidget {
                                     Get.back();
                                     Get.to(() => ImageSendScreen(userModelReceiver: userModelReceiver, messageController: messageController, thread: thread, isThread: isThread));
                                     threadController.selectedImagePath.value = image.path;
+                                    threadController.selectedImage = image;
                                     chatController?.selectedImagePath.value = image.path;
+                                    chatController?.selectedImage = image;
                                   }
                                 },  icon: Iconsax.gallery, backgroundColor: Colors.green.shade700, buttonLabel: "Gallery"
                                 ),
@@ -190,7 +192,7 @@ class TypeMessagesBar extends StatelessWidget {
                     threadController.sendThreadMessage(
                         thread, userModelReceiver,
                         user.encryptor.encrypt(messageController.text, iv: user.iv).base64,
-                        threadController.selectedImagePath.value);
+                        threadController.selectedImage);
                     messageController.clear();
 
                   } else {
@@ -199,7 +201,7 @@ class TypeMessagesBar extends StatelessWidget {
                         receiver: userModelReceiver,
                         sender: user.user.value,
                         message: user.encryptor.encrypt(messageController.text, iv: user.iv).base64,
-                        imgUrl: chatController?.selectedImagePath.value);
+                        image: chatController?.selectedImage);
                     messageController.clear();
                   }
                 }

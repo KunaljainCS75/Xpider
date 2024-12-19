@@ -5,10 +5,8 @@ import 'package:xpider_chat/common/images/circular_images.dart';
 import 'package:xpider_chat/features/chat/controllers/call_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
 
-import '../../../common/custom_shapes/containers/rounded_container.dart';
-import '../../../utils/constants/colors.dart';
-import '../../../utils/constants/sizes.dart';
-
+import '../../../../common/custom_shapes/containers/rounded_container.dart';
+import '../../../../utils/constants/sizes.dart';
 
 class CallLogs extends StatelessWidget {
   const CallLogs({

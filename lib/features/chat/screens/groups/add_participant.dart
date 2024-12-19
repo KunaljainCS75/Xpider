@@ -13,6 +13,7 @@ import '../../../../data/user/user.dart';
 import '../../../../utils/constants/colors.dart';
 import '../../../../utils/constants/image_strings.dart';
 import '../../../../utils/constants/sizes.dart';
+import '../../../../utils/popups/loaders.dart';
 import '../../controllers/group_controller.dart';
 import '../../controllers/user_controller.dart';
 import '../../models/group_user_model.dart';
@@ -35,8 +36,14 @@ class AddParticipantScreen extends StatelessWidget {
     searchXpiderMembers.assignAll(userController.users);
     searchXpiderMembers.sort((a, b) => a.fullName.toLowerCase().compareTo(b.fullName.toLowerCase()));
 
+    // Participants to add
     List<GroupUserModel> participants = <GroupUserModel>[];
 
+    // Id of already added participants
+    List<String> alreadyAdded = [];
+    for (var user in group.participants){
+      alreadyAdded.add(user.id);
+    }
     return Scaffold(
       appBar: TAppBar(
         title: Text("Add Members", style: Theme.of(context).textTheme.headlineMedium),
@@ -44,9 +51,14 @@ class AddParticipantScreen extends StatelessWidget {
           InkWell(
             onTap: () {
               final groupController = GroupController.instance;
-              groupController.addParticipants(participants: participants, group: group);
+              if (participants.isNotEmpty) {
+                groupController.addParticipants(
+                    participants: participants, group: group);
+                Get.back();
+              } else {
+                Loaders.customToast(message: "You need to select at least one participant");
+              }
 
-              Get.back();
             },
             child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: TSizes.iconLg),
           )
@@ -95,17 +107,26 @@ class AddParticipantScreen extends StatelessWidget {
                             username: user.username,
                             phoneNumber: user.phoneNumber,
                             email: user.email,
-                            profilePicture: user.profilePicture
+                            profilePicture: user.profilePicture,
+                           position: "Member"
                         );
-
+                        print(group.participants.length);
                         RxBool isSelected = false.obs;
                         return InkWell(
                           onTap: () {
-                            isSelected.value = !isSelected.value;
-                            if (isSelected.value){
-                              participants.add(groupUser);
+                            if (user.email != userController.user.value.email) {
+                              if (!alreadyAdded.contains(user.id)) {
+                                isSelected.value = !isSelected.value;
+                                if (isSelected.value) {
+                                  participants.add(groupUser);
+                                } else {
+                                  participants.removeWhere((person) => person.id == groupUser.id);
+                                }
+                              } else {
+                                Loaders.customToast(message: "${user.fullName} is already added");
+                              }
                             } else {
-                              participants.removeWhere((person) => person.id == groupUser.id);
+                              Loaders.customToast(message: "You are already added");
                             }
                             print(participants.length);
                           },

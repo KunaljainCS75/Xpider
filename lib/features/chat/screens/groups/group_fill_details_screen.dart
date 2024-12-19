@@ -45,8 +45,8 @@ class GroupFillDetailsScreen extends StatelessWidget {
       onPopInvoked: (value) {
         groupMembers.removeWhere((person) => person.id == myProfile.id);
         for (var person in groupMembers){
-          if (person.admin == true){
-            person.admin = false;
+          if (person.position == "Admin"){
+            person.position = "Member";
           }
         }
       },
@@ -161,13 +161,13 @@ class GroupFillDetailsScreen extends StatelessWidget {
               ListWithHeading(
                 heading: 'Admins',
                 overLayColor: Colors.redAccent,
-                imageUrl: "assets/images/user/admin.png", list: groupMembers.where((person) => person.admin == true).toList()),
+                imageUrl: "assets/images/user/admin.png", list: groupMembers.where((person) => person.position == 'Admin').toList()),
 
               /// Group Members
               ListWithHeading(
                 heading: 'Members',
                 imageUrl: "assets/images/user/admin.png",
-                list: groupMembers.where((person) => person.admin == false).toList()),
+                list: groupMembers.where((person) => person.position == "Member").toList()),
             ],
           ),
         ),

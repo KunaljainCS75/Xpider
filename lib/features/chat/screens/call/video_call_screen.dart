@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:xpider_chat/data/user/user.dart';
 import 'package:xpider_chat/features/chat/controllers/chat_controller.dart';
 import 'package:xpider_chat/features/chat/controllers/user_controller.dart';
@@ -22,8 +23,8 @@ class VideoCallScreen extends StatelessWidget {
 
     String callEndTime;
     return ZegoUIKitPrebuiltCall(
-      appID: 801094160, // your AppID,
-      appSign: 'b94ccb5096c61ef08342c037fb4791cdc2e116988094ab0721fc130a7b00626e',
+      appID: int.tryParse(dotenv.env["API_ID"] ?? "1") ?? 1, // your AppID,
+      appSign: dotenv.env["API_SIGN"] ?? '',
       userID: UserController.instance.user.value.id,
       userName: UserController.instance.user.value.fullName,
       callID: zegoCallId,

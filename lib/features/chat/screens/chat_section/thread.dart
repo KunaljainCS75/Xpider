@@ -71,44 +71,55 @@ class ThreadsScreen extends StatelessWidget {
               title: "Add New Thread",
               middleText: "Write a name for new thread",
               onConfirm: () async {
-                Loaders.customToast(message: "Thread added");
                 print(threadNameController.text);
                 chatController.selectedImagePath.value = '';
                 chatController.sendMessage(
                     receiver: receiver,
                     message: UserController.instance.encryptor.encrypt("A thread is created", iv: UserController.instance.iv).base64,
                     sender: UserController.instance.user.value,
-                    imgUrl: chatController.selectedImagePath.value);
+                    image: chatController.selectedImage);
                 await threadController.addThread(receiver, UserController.instance.encryptor.encrypt("A thread is created", iv: UserController.instance.iv).base64, receiver.profilePicture, threadNameController.text);
                 threadNameController.clear();
+                Loaders.customToast(message: "Thread added");
                 Get.back();
-
               },
-              content: RoundedContainer(
-                backgroundColor: TColors.grey,
-                child: Row(
+              content: Obx(
+                () => Column(
                   children: [
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.black26,)),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * .55,
-                      child: TextField(
-                        style: TextStyle(color: Colors.black87),
-                        controller: threadNameController,
-                        textAlign: TextAlign.justify,
-                        textInputAction: TextInputAction.newline,
-                        // textAlignVertical: TextAlignVertical.center,
-                        cursorColor: TColors.darkGrey,
-                        cursorHeight: 18,
-                        scrollPhysics: const BouncingScrollPhysics(),
-                        cursorOpacityAnimates: true,
-                        decoration: const InputDecoration(
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            border: InputBorder.none,
-                            hintFadeDuration: Duration(milliseconds: 500),
-                            hintText: "Thread Name...",
-                            hintStyle: TextStyle(color: TColors.darkGrey)
-                        ),
+                    threadController.isLoading.value
+                        ? const Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: TSizes.spaceBtwItems)])
+                        : const SizedBox(),
+                    RoundedContainer(
+                      backgroundColor: TColors.grey,
+                      child: Row(
+                        children: [
+                          IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.black26,)),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * .55,
+                            child: TextField(
+                              style: TextStyle(color: Colors.black87),
+                              controller: threadNameController,
+                              textAlign: TextAlign.justify,
+                              textInputAction: TextInputAction.newline,
+                              // textAlignVertical: TextAlignVertical.center,
+                              cursorColor: TColors.darkGrey,
+                              cursorHeight: 18,
+                              scrollPhysics: const BouncingScrollPhysics(),
+                              cursorOpacityAnimates: true,
+                              decoration: const InputDecoration(
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  border: InputBorder.none,
+                                  hintFadeDuration: Duration(milliseconds: 500),
+                                  hintText: "Thread Name...",
+                                  hintStyle: TextStyle(color: TColors.darkGrey)
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

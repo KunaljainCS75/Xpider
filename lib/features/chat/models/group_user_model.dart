@@ -4,7 +4,7 @@ import '../../../utils/formatters/formatter.dart';
 
 class GroupUserModel{
 
-  final String id;
+  String id;
   String firstName;
   String lastName;
   final String username;
@@ -13,8 +13,7 @@ class GroupUserModel{
   String profilePicture;
   String about;
   final int? numberOfMessages;
-  bool admin;
-  bool editor;
+  String position;
 
   GroupUserModel({
     required this.id,
@@ -26,8 +25,7 @@ class GroupUserModel{
     required this.profilePicture,
     this.about = "I am Busy",
     this.numberOfMessages = 0,
-    this.admin = false,
-    this.editor = false,
+    required this.position
 
   });
 
@@ -52,7 +50,7 @@ class GroupUserModel{
   }
 
   /// Static function to create an empty user model.
-  static GroupUserModel empty() => GroupUserModel(id: '', firstName: '', lastName: '', username: '', phoneNumber: '', email: '', profilePicture: 'assets/images/network/spider.png', about: "Let's Xpider the community");
+  static GroupUserModel empty() => GroupUserModel(id: '', firstName: '', lastName: '', username: '', phoneNumber: '', email: '', profilePicture: 'assets/images/network/spider.png', about: "Let's Xpider the community", position: 'Member');
 
   /// Convert Model to JSON Structure for storing data in Firebase.
   toJson(){
@@ -66,8 +64,7 @@ class GroupUserModel{
       'ProfilePicture' : profilePicture,
       'About' : about,
       'NumberOfMessages' : numberOfMessages,
-      'Admin' : admin,
-      'Editor' : editor
+      'Position' : position
     };
   }
 
@@ -86,8 +83,7 @@ class GroupUserModel{
           profilePicture: data['ProfilePicture'] ?? 'assets/images/user/user.png',
           about: data["About"] ?? 'I am busy',
           numberOfMessages: data["NumberOfMessages"] ?? 0,
-          admin: data["Admin"] ?? false,
-          editor: data["Editor"] ?? false,
+          position: data['Position'] ?? "Member"
       );
     }
     throw Exception("No such User Found");
@@ -106,8 +102,7 @@ class GroupUserModel{
         profilePicture: data['ProfilePicture'] ?? 'assets/images/user/user.png',
         about: data["About"] ?? 'I am busy',
         numberOfMessages: data["NumberOfMessages"] ?? 0,
-        admin: data["Admin"] ?? false,
-        editor: data["Editor"] ?? false,
+        position: data['Position'] ?? "Member"
     );
   }
 }
